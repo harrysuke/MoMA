@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MoMA — Android Application Design Solution</title>
+<style>
+:root{
+  --bg:#f4f8f6; --surface:#ffffff; --ink:#13251e; --muted:#61756c;
+  --line:#dce8e1; --primary:#147a58; --primary-dark:#0d5c42; --accent:#e8f6ee;
+  --soft:#f0f5f2; --amber:#b56a0b; --red:#b34242; --blue:#2a6bb5;
+  --shadow:0 10px 30px rgba(19,60,43,.09); --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Roboto,-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.55}
+a{color:var(--primary-dark)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.hero{background:linear-gradient(135deg,#0d5c42 0%,#1a8a63 100%);color:#fff;padding:46px 0 38px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.07);right:-120px;top:-190px}
+.hero .wrap{position:relative;z-index:1}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.82;font-weight:700}
+.hero h1{font-size:38px;line-height:1.15;margin:10px 0 8px;font-weight:750;letter-spacing:-.02em}
+.hero p{max-width:760px;margin:0;opacity:.93;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:650}
+.chip.on{background:var(--accent);border-color:#b9dfcb;color:var(--primary-dark)}
+.hero .chip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+.topnav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topnav .wrap{display:flex;gap:22px;overflow-x:auto;white-space:nowrap}
+.topnav a{padding:14px 0;font-size:13px;font-weight:650;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.topnav a:hover{color:var(--primary-dark);border-color:var(--primary)}
+main{padding:34px 0 70px}
+section{margin-bottom:52px;scroll-margin-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.sec-num{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.1em}
+h2{font-size:26px;letter-spacing:-.02em;margin:0;font-weight:750}
+h3{font-size:16px;margin:0 0 10px;font-weight:700}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.metric strong{display:block;font-size:26px;color:var(--primary-dark);line-height:1.1}
+.metric span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--soft)}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;background:var(--accent);color:var(--primary-dark)}
+.tag.blue{background:#e7f0fb;color:var(--blue)} .tag.amber{background:#fdf1dd;color:var(--amber)} .tag.red{background:#fbeaea;color:var(--red)}
+.callout{border-left:3px solid var(--primary);background:var(--accent);padding:14px 16px;border-radius:0 12px 12px 0;font-size:14px;color:#224b3b;margin-top:16px}
+
+/* ---------- Prototype ---------- */
+.proto-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.segmented{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px}
+.segmented button{border:0;background:transparent;color:var(--muted);font-weight:650;font-size:12px;padding:8px 14px;border-radius:9px;cursor:pointer}
+.segmented button.active{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(20,122,88,.25)}
+.proto-grid{display:grid;grid-template-columns:186px 366px minmax(0,1fr);gap:22px;align-items:start}
+.flow-rail,.spec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.flow-rail h4,.spec h4{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:2px 4px 10px}
+.flow-btn{display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid transparent;background:transparent;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:650;color:var(--ink);cursor:pointer;text-align:left}
+.flow-btn:hover{background:var(--soft)}
+.flow-btn.active{background:var(--accent);border-color:#bfe1ce;color:var(--primary-dark)}
+.flow-btn small{color:var(--muted);font-weight:600}
+.screen-list{display:flex;flex-direction:column;gap:2px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.screen-link{border:0;background:transparent;text-align:left;padding:7px 11px;border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;display:flex;gap:8px;align-items:center}
+.screen-link:hover{background:var(--soft);color:var(--ink)}
+.screen-link.active{background:var(--primary);color:#fff;font-weight:650}
+.screen-link i{font-style:normal;font-size:10px;opacity:.6;width:16px}
+.spec .spec-title{font-size:17px;font-weight:750;margin-bottom:4px}
+.spec .spec-role{font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.spec ul{padding-left:18px;margin:8px 0 14px;font-size:13px}
+.spec li{margin-bottom:5px}
+.spec dt{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:750;margin-top:12px}
+.spec dd{margin:3px 0 0;font-size:13px}
+.phone-stage{display:flex;flex-direction:column;align-items:center;gap:12px}
+.phone{width:346px;height:706px;background:#0d1a14;border-radius:42px;padding:10px;box-shadow:0 24px 60px rgba(10,45,30,.24);position:relative}
+.phone:after{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:82px;height:20px;background:#0d1a14;border-radius:0 0 14px 14px;z-index:5}
+.phone-view{position:relative;width:100%;height:100%;background:#fbfdfc;border-radius:33px;overflow:hidden;display:flex;flex-direction:column}
+.statusbar{height:32px;flex:0 0 32px;display:flex;align-items:center;justify-content:space-between;padding:6px 22px 0;font-size:10px;font-weight:750;color:#243b31;background:#fbfdfc;z-index:4}
+.statusbar .dots{letter-spacing:2px;font-size:9px}
+.screen{flex:1;overflow-y:auto;padding:8px 16px 90px;scrollbar-width:thin}
+.screen::-webkit-scrollbar{width:4px}.screen::-webkit-scrollbar-thumb{background:#cfded5;border-radius:4px}
+.bottomnav{position:absolute;left:0;right:0;bottom:0;height:68px;background:#fff;border-top:1px solid #e5eee8;display:flex;justify-content:space-around;align-items:center;padding-bottom:8px;z-index:3}
+.phone.auth .bottomnav{display:none}
+.navbtn{border:0;background:transparent;color:#84968d;font-size:9px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:52px}
+.navbtn.active{color:var(--primary)}
+.navbtn .ico{width:19px;height:19px;border:1.8px solid currentColor;border-radius:5px;display:grid;place-items:center;font-size:10px;line-height:1}
+.navbtn.active .ico{background:var(--accent)}
+.appbar{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:8px}
+.back{border:1px solid var(--line);background:#fff;width:30px;height:30px;border-radius:9px;color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+.appbar h3{font-size:15px;margin:0;flex:1}
+.appbar .mini{font-size:10px;color:var(--muted);font-weight:700}
+.screen h1{font-size:23px;line-height:1.2;margin:6px 0 4px;letter-spacing:-.02em}
+.screen h2{font-size:15px;margin:18px 0 9px}
+.screen p{font-size:12px;color:var(--muted);margin:0 0 10px}
+.brandcircle{width:88px;height:88px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;margin:38px auto 16px;box-shadow:0 8px 20px rgba(20,122,88,.12);font-weight:800;color:var(--primary);font-size:21px}
+.center{text-align:center}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:10px;font-weight:750;color:#40584d;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;border:1px solid #d5e3da;border-radius:10px;padding:10px 11px;font-size:12px;background:#fff;color:var(--ink);font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(20,122,88,.09)}
+.field textarea{min-height:72px;resize:none}
+.btn{border:0;border-radius:11px;background:var(--primary);color:#fff;width:100%;padding:12px;font-size:12px;font-weight:750;cursor:pointer;margin-top:6px}
+.btn.dark{background:#17241f}.btn.ghost{background:#fff;color:var(--primary);border:1px solid #b9dfcb}
+.btn.small{width:auto;padding:8px 14px;margin:0;font-size:11px}
+.linklike{border:0;background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;padding:4px}
+.social{display:flex;gap:8px;margin-top:10px}
+.social button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 4px;font-size:11px;font-weight:700;color:#294237;cursor:pointer}
+.searchbox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px;color:#8ba096}
+.searchbox .mag{width:13px;height:13px;border:2px solid #93a99c;border-radius:50%;position:relative}
+.searchbox .mag:after{content:"";position:absolute;width:6px;height:2px;background:#93a99c;transform:rotate(45deg);right:-5px;bottom:-1px}
+.chiprow{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:none}
+.chiprow::-webkit-scrollbar{display:none}
+.mini-chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:10px;font-weight:700;color:#4a5f55;cursor:pointer}
+.mini-chip.active,.mini-chip:hover{background:var(--accent);border-color:#b9dfcb;color:var(--primary-dark)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 4px;text-align:center;cursor:pointer}
+.tile .dot{width:38px;height:38px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;background:linear-gradient(135deg,#1c8a63,#52b78e)}
+.tile span{font-size:10px;font-weight:700;color:#3b5146}
+.icard{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;margin-bottom:9px;cursor:pointer}
+.icard-top{display:flex;gap:10px;align-items:center}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;flex:0 0 auto;background:linear-gradient(135deg,#216f57,#79c4a0)}
+.avatar.alt{background:linear-gradient(135deg,#315f9c,#7da9dd)}
+.avatar.warm{background:linear-gradient(135deg,#a1632c,#d8a36f)}
+.icard b{font-size:12px;display:block}
+.icard small{font-size:10px;color:var(--muted)}
+.rowline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px}
+.price{font-size:12px;font-weight:800;color:var(--primary-dark)}
+.rating{font-size:10px;color:#9a6b12;font-weight:750}
+.verified{font-size:9px;font-weight:750;color:var(--primary);background:var(--accent);border-radius:5px;padding:2px 5px}
+.hero-band{height:112px;border-radius:14px;background:linear-gradient(135deg,#126d50,#63bd93);margin-bottom:10px;position:relative;overflow:hidden}
+.hero-band:after{content:"";position:absolute;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.14);right:-24px;top:-34px}
+.band-label{position:absolute;bottom:10px;left:14px;color:#fff;font-size:10px;font-weight:750;letter-spacing:.08em;z-index:1}
+.slotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.slot{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 4px;text-align:center;font-size:10px;font-weight:750;cursor:pointer}
+.slot.free{border-color:#b9dfcb;background:var(--accent);color:var(--primary-dark)}
+.slot.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+.slot.held{background:#fdf1dd;border-color:#f0d6a8;color:var(--amber)}
+.slot.booked{background:#f2f4f3;color:#9bad9f;cursor:default}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}
+.stat b{display:block;font-size:18px;color:var(--primary-dark);line-height:1.1}
+.stat small{font-size:10px;color:var(--muted)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:74px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.bars i{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#4cb48a,#1a8a63);display:block}
+.bars span{font-size:9px;color:var(--muted);text-align:center;display:block;margin-top:4px}
+.tabrow{display:flex;gap:5px;background:var(--soft);border-radius:10px;padding:3px;margin-bottom:11px}
+.tabrow button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 4px;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer}
+.tabrow button.active{background:#fff;color:var(--primary-dark);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.status{font-size:9px;font-weight:800;padding:3px 7px;border-radius:6px;background:var(--accent);color:var(--primary-dark)}
+.status.warn{background:#fdf1dd;color:var(--amber)} .status.info{background:#e7f0fb;color:var(--blue)}
+.progress{display:flex;align-items:center;gap:4px;margin:8px 0 14px}
+.progress .step{flex:1;text-align:center;font-size:9px;color:#8ca095;font-weight:700}
+.progress .step.on{color:var(--primary)}
+.progress .pip{height:4px;border-radius:3px;background:var(--line);flex:1}
+.progress .pip.on{background:var(--primary)}
+.summary{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:9px}
+.summary div{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.summary div span:first-child{color:var(--muted)}
+.summary .total{border-top:1px dashed var(--line);margin-top:6px;padding-top:8px;font-weight:800;font-size:12px}
+.starrow{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.starrow button{border:0;background:transparent;cursor:pointer;width:34px;height:34px;padding:2px}
+.starrow svg{width:100%;height:100%}
+.listrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:8px;cursor:pointer}
+.listrow .txt{flex:1}
+.listrow b{font-size:12px;display:block}
+.listrow small{font-size:10px;color:var(--muted)}
+.chev{color:#9db0a5;font-size:15px}
+.toggle{width:32px;height:18px;border-radius:999px;background:#d3ded7;position:relative;flex:0 0 auto}
+.toggle:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on{background:var(--primary)}.toggle.on:after{left:16px}
+.ring{width:78px;height:78px;border-radius:50%;background:conic-gradient(var(--primary) 0 72%,#e3ede7 72% 100%);display:grid;place-items:center;margin:0 auto 6px}
+.ring:after{content:"";position:absolute}.ring div{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:14px;font-weight:800;color:var(--primary-dark)}
+.queue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;margin-bottom:8px}
+.queue .rowline{margin-top:6px}
+.proto-foot{display:flex;gap:8px;align-items:center;justify-content:center}
+.hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* ---------- Diagrams ---------- */
+.stack{display:flex;flex-direction:column;gap:9px}
+.node{border:1px solid #cfe1d6;background:#fff;border-radius:12px;padding:12px 14px;font-size:13px;text-align:center}
+.node b{display:block;font-size:13px}
+.node small{color:var(--muted);font-size:11px}
+.node.primary{background:var(--accent);border-color:#b9dfcb}
+.node.neutral{background:#f1f4f2;border-color:#dde5e0}
+.arrow{text-align:center;color:var(--primary);font-size:16px;line-height:1;margin:-3px 0}
+.flow3{display:grid;grid-template-columns:1fr 34px 1fr 34px 1fr;gap:6px;align-items:center}
+.flow3 .arrow{font-size:20px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-step{display:flex;gap:14px;align-items:flex-start;position:relative;padding-bottom:18px}
+.tl-step:last-child{padding-bottom:0}
+.tl-step:before{content:"";position:absolute;left:14px;top:30px;bottom:-2px;width:2px;background:var(--line)}
+.tl-step:last-child:before{display:none}
+.tl-num{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--primary-dark);display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto;z-index:1;border:1px solid #b9dfcb}
+.tl-body{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;flex:1;font-size:13px}
+.tl-body b{display:block;font-size:13px}
+.tl-body small{color:var(--muted);font-size:11px}
+footer{border-top:1px solid var(--line);background:#fff;padding:24px 0;font-size:12px;color:var(--muted)}
+@media(max-width:1050px){.proto-grid{grid-template-columns:170px 366px}.spec{grid-column:1/-1}.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.proto-grid{grid-template-columns:1fr}.flow-rail{order:2}.phone-stage{order:1}.hero h1{font-size:30px}.flow3{grid-template-columns:1fr}.flow3 .arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Mobile application design solution</div>
+    <h1>MoMA — Masters of Martial Arts</h1>
+    <p>An Android marketplace connecting students and gyms with independent martial arts coaches. This solution turns the 13 brief areas into a role-aware, offline-ready product, with the first release focused on a BJJ gym that needs four specialist coaches for a fixed weekly curriculum.</p>
+    <div class="chips">
+      <span class="chip">First stakeholder: BJJ gym</span><span class="chip">Judo · Wrestling · Kyokushin · Muay Thai</span>
+      <span class="chip">Android · Kotlin</span><span class="chip">Jetpack Compose · Material 3</span>
+      <span class="chip">MVVM + Clean Architecture</span><span class="chip">Room / SQLite</span>
+      <span class="chip">Supabase</span><span class="chip">Stripe + Stripe Connect</span>
+    </div>
+  </div>
+</header>
+
+<nav class="topnav"><div class="wrap">
+  <a href="#overview">Overview</a><a href="#gym">BJJ gym focus</a><a href="#ia">Information architecture</a><a href="#prototype">Interactive prototype</a>
+  <a href="#architecture">Architecture</a><a href="#data">Data &amp; offline</a><a href="#security">Security &amp; quality</a><a href="#delivery">Delivery plan</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="overview">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Solution overview</h2></div>
+  <div class="grid4">
+    <div class="metric"><strong>13</strong><span>brief areas covered</span></div>
+    <div class="metric"><strong>33</strong><span>designed app screens</span></div>
+    <div class="metric"><strong>4</strong><span>user roles with scoped access</span></div>
+    <div class="metric"><strong>4</strong><span>delivery phases</span></div>
+  </div>
+  <div class="grid2" style="margin-top:18px">
+    <div class="card">
+      <h3>Product proposition</h3>
+      <p>MoMA is a two-sided gig marketplace. Coaches publish lessons and control their availability; students and gyms discover, match, book and pay for training; moderators keep the marketplace safe and trustworthy. Revenue comes from a 10–20% commission per lesson, optional coach subscriptions and targeted advertising.</p>
+      <p class="muted" style="margin-bottom:0">First beachhead: one BJJ gym hiring four specialist coaches. Broad student marketplace and community features follow once the weekly program is staffed and running.</p>
+    </div>
+    <div class="card">
+      <h3>Design principles</h3>
+      <ul style="margin:0;padding-left:18px;font-size:13px">
+        <li><b>Trust before transaction:</b> verified profiles, transparent pricing, reviews and disputes.</li>
+        <li><b>Server-authoritative money:</b> booking and payment state are never decided on the device.</li>
+        <li><b>Offline-first reads:</b> Room is the local source of truth with a visible "saved data" banner.</li>
+        <li><b>Role-aware by default:</b> every screen and API call is scoped to student, instructor or admin.</li>
+        <li><b>Accessible mobile UX:</b> 48 dp touch targets, TalkBack labels, scalable text, clear status chips.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>Recommendation:</b> keep the client thin and the rules on the server. Supabase Edge Functions own matching, booking holds, commission, Stripe PaymentIntents, payouts and notifications; Android only renders state and collects intent.</div>
+</section>
+
+<section id="gym">
+  <div class="sec-head"><span class="sec-num">01b</span><h2>First stakeholder — BJJ gym program</h2></div>
+  <p class="muted">The first customer is not an individual student: it is a BJJ gym that needs to source four specialist coaches for a fixed weekly curriculum. Discovery, matching, credential verification, availability and checkout are tuned to these styles before the wider marketplace is opened.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Coach requirements to fill</h3>
+      <table>
+        <tr><th>Hire</th><th>Mandatory credential</th><th>Program it serves</th><th>Ruleset focus</th></tr>
+        <tr><td><b>Judo black belt</b></td><td>Verified dan-grade certificate; BJJ-compatible ukemi and throw coaching</td><td>Wed · Judo for BJJ</td><td>Gi / No-Gi adaptations</td></tr>
+        <tr><td><b>Wrestler</b></td><td>Competition record; takedown and exposure experience</td><td>Thu · Wrestling for No-Gi BJJ</td><td><span class="tag">ADCC ruleset</span></td></tr>
+        <tr><td><b>Kyokushin Karate black belt</b></td><td>Verified black belt; striking and conditioning coaching</td><td>Fri · Striking for No-Gi BJJ</td><td><span class="tag blue">ACBJJ Battle Jiu-Jitsu</span></td></tr>
+        <tr><td><b>Muay Thai coach</b></td><td>Verified coaching licence or gym credential</td><td>Fri · Striking for No-Gi BJJ</td><td><span class="tag blue">ACBJJ Battle Jiu-Jitsu</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Weekly curriculum</h3>
+      <table>
+        <tr><th>Day</th><th>Program</th><th>Coach needed</th></tr>
+        <tr><td>Mon</td><td>BJJ Gi</td><td>Internal / BJJ black belt</td></tr>
+        <tr><td>Tue</td><td>BJJ No-Gi</td><td>Internal / BJJ black belt</td></tr>
+        <tr><td>Wed</td><td>Judo for BJJ</td><td><span class="tag amber">Hiring: Judo black belt</span></td></tr>
+        <tr><td>Thu</td><td>Wrestling for No-Gi BJJ — ADCC ruleset</td><td><span class="tag amber">Hiring: Wrestler</span></td></tr>
+        <tr><td>Fri</td><td>Striking for No-Gi BJJ — ACBJJ Battle Jiu-Jitsu ruleset</td><td><span class="tag amber">Hiring: Kyokushin + Muay Thai</span></td></tr>
+        <tr><td>Sat</td><td>BJJ Gi open mat</td><td>Internal / open supervision</td></tr>
+        <tr><td>Sun</td><td>BJJ No-Gi open mat</td><td>Internal / open supervision</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout"><b>Scope decision:</b> the first release supports exactly six styles — BJJ Gi, BJJ No-Gi, Judo, Wrestling, Kyokushin Karate and Muay Thai — plus the two ruleset tags ADCC and ACBJJ Battle Jiu-Jitsu. A verified credential is a hard filter in matching, not a nice-to-have; candidates without it are excluded before scoring.</div>
+</section>
+
+<section id="ia">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Information architecture &amp; roles</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Navigation model</h3>
+      <p class="muted">One <code>MainActivity</code> hosting a Navigation Compose <code>NavHost</code>. Unauthenticated and authenticated graphs are separated; role-specific destinations are reachable only from Profile when the claim permits.</p>
+      <div class="stack">
+        <div class="node primary"><b>Unauthenticated graph</b><small>Splash → Onboarding → Login → Register → Forgot password</small></div>
+        <div class="arrow">↓</div>
+        <div class="node"><b>Authenticated graph — bottom bar</b><small>Home · Search · Bookings · Groups · Profile</small></div>
+        <div class="arrow">↓</div>
+        <div class="node neutral"><b>Modal / full-screen flows</b><small>Instructor detail · Matching · Checkout · Review · Dispute · Report · Support · Admin console</small></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Role capabilities</h3>
+      <table>
+        <tr><th>Role</th><th>Primary goals</th><th>Entry screens</th></tr>
+        <tr><td><span class="tag">Student</span></td><td>Discover, compare, book, pay, review, track progress, join groups</td><td>Search, matching, instructor detail, checkout, bookings, dashboard</td></tr>
+        <tr><td><span class="tag blue">Coach / instructor</span></td><td>Publish lessons, set availability, get paid, build reputation</td><td>Profile/portfolio, listing editor, availability, sales report, payouts</td></tr>
+        <tr><td><span class="tag amber">Gym owner / program manager</span></td><td>Source four specialist coaches, publish the weekly curriculum, manage coverage</td><td>Gym home, curriculum, coach shortlist, coach profile, role posting</td></tr>
+        <tr><td><span class="tag red">Admin</span></td><td>Verify credentials, moderate, resolve disputes and reports, monitor payouts</td><td>Admin console, credential verification, dispute and report queues</td></tr>
+      </table>
+      <div class="callout" style="margin-top:14px">Bottom-bar labels adapt by role: <b>Programs · Curriculum · Candidates · Bookings · Profile</b> for the gym, <b>Today · Listings · Bookings · Reports · Profile</b> for coaches, and <b>Overview · Verify · Disputes · Reports · Profile</b> for admins.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Screen inventory — brief area to Android screen</h3>
+    <table>
+      <tr><th>Brief area</th><th>Screens in the solution</th><th>Source</th><th>Phase</th></tr>
+      <tr><td>Authentication</td><td>Splash/onboarding, Login, Register, Forgot password</td><td>Brief p.4</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Profiles &amp; portfolio</td><td>Profile, Instructor portfolio detail</td><td>Brief p.5</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Listings &amp; content management</td><td>Category list, Listing editor, Instructor detail</td><td>Brief p.6</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Search &amp; discovery</td><td>Search with autocomplete and filters</td><td>Brief p.7</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Forums &amp; groups</td><td>Groups, Group feed, Post composer</td><td>Brief p.8</td><td><span class="tag">2</span></td></tr>
+      <tr><td>Matching algorithm</td><td>Preference form, Ranked matches</td><td>Brief p.9</td><td><span class="tag">2</span></td></tr>
+      <tr><td>Payments &amp; transactions</td><td>Availability slots, 4-step Checkout, Bookings</td><td>Brief p.9</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Disputes</td><td>Dispute form, Admin dispute queue</td><td>Brief p.10</td><td><span class="tag">3</span></td></tr>
+      <tr><td>Ratings &amp; reviews</td><td>Review composer with stars, tags and media</td><td>Brief p.10</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Dashboard analytics</td><td>Training dashboard with custom widgets</td><td>Brief p.11</td><td><span class="tag">2</span></td></tr>
+      <tr><td>Reporting</td><td>Sales report, User/content report form</td><td>Brief p.12</td><td><span class="tag">3</span></td></tr>
+      <tr><td>Support</td><td>Support form with contact options</td><td>Brief p.13</td><td><span class="tag">1</span></td></tr>
+      <tr><td>Accessibility &amp; admin</td><td>Verification queue, Moderation, Accessibility hardening</td><td>Derived from Operations</td><td><span class="tag amber">4</span></td></tr>
+      <tr><td><b>First stakeholder — BJJ gym</b></td><td>Gym home, weekly curriculum, coach shortlist, coach credential profile, role posting</td><td>Stakeholder brief: Mon–Sun program</td><td><span class="tag">1</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Interactive screen prototype</h2></div>
+  <p class="muted">The prototype opens on the BJJ gym journey. Switch role journeys, then tap screens or use the buttons inside the phone. It demonstrates navigation, credential gating, state and role scoping — not real transactions.</p>
+  <div class="proto-toolbar">
+    <div class="segmented" id="flowButtons"></div>
+    <span class="chip on" id="screenCounter">Screen 1 / 12</span>
+  </div>
+  <div class="proto-grid">
+    <div class="flow-rail">
+      <h4>Journey screens</h4>
+      <div id="screenRail" class="screen-list"></div>
+    </div>
+    <div class="phone-stage">
+      <div class="phone auth" id="phone">
+        <div class="phone-view">
+          <div class="statusbar"><span>10:30</span><span class="dots">● ● ●</span></div>
+          <div class="screen" id="screen"></div>
+          <div class="bottomnav" id="bottomnav"></div>
+        </div>
+      </div>
+      <div class="proto-foot">
+        <button class="btn ghost small" id="prevBtn">Previous</button>
+        <button class="btn small" id="nextBtn">Next screen</button>
+      </div>
+      <div class="hint">Tip: tabs, chips, stars and filters are interactive.</div>
+    </div>
+    <div class="spec" id="spec"></div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Application &amp; system architecture</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Client layers — MVVM + Clean Architecture</h3>
+      <div class="stack">
+        <div class="node"><b>UI · Jetpack Compose</b><small>Screens, Navigation Compose, Material 3 theme, UiState</small></div>
+        <div class="arrow">↓ events / ↑ state</div>
+        <div class="node"><b>ViewModel + Use cases</b><small>Book lesson, submit review, publish post, submit report</small></div>
+        <div class="arrow">↓</div>
+        <div class="node primary"><b>Repository interfaces</b><small>Single entry point to local and remote data</small></div>
+        <div class="arrow">↓</div>
+        <div class="node"><b>Room (SQLite) ⇄ Retrofit (REST)</b><small>Local source of truth; network writes through outbox + WorkManager</small></div>
+      </div>
+      <div class="callout">The UI never talks to Room or Retrofit directly. Remote data is written into Room before screens observe it.</div>
+    </div>
+    <div class="card">
+      <h3>System context</h3>
+      <div class="flow3">
+        <div class="stack">
+          <div class="node primary"><b>Android client</b><small>Compose · ViewModel · Room</small></div>
+          <div class="node"><b>Secure token store</b><small>Keystore-backed</small></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="stack">
+          <div class="node primary"><b>Supabase</b><small>Auth · PostgREST · Edge Functions</small></div>
+          <div class="node"><b>PostgreSQL + RLS</b><small>Storage · Realtime</small></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="stack">
+          <div class="node neutral"><b>Stripe / Connect</b><small>PaymentIntent · payouts</small></div>
+          <div class="node neutral"><b>FCM · OAuth</b><small>Push · Google/Facebook</small></div>
+        </div>
+      </div>
+      <div class="callout">Public anon key is safe in the app; <b>RLS is the security boundary</b>. Service-role and Stripe secret keys exist only in Edge Functions.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>Booking &amp; payment sequence — server-authoritative</h3>
+    <div class="timeline">
+      <div class="tl-step"><div class="tl-num">1</div><div class="tl-body"><b>Browse and match</b><small>Cached listings render from Room; online results refresh in the background with a "saved data" banner.</small></div></div>
+      <div class="tl-step"><div class="tl-num">2</div><div class="tl-body"><b>Select an availability slot</b><small>POST /functions/v1/create-booking. Edge Function atomically checks the slot in a transaction and holds it for 10 minutes.</small></div></div>
+      <div class="tl-step"><div class="tl-num">3</div><div class="tl-body"><b>Create pending booking</b><small>Stripe PaymentIntent created with application_fee_amount = resolved 10–20% commission. Client receives bookingId + clientSecret; booking is PENDING_PAYMENT.</small></div></div>
+      <div class="tl-step"><div class="tl-num">4</div><div class="tl-body"><b>Pay with Stripe Android SDK</b><small>Card details go straight to Stripe. No PAN or CVV ever touches MoMA SQLite or the app's logs.</small></div></div>
+      <div class="tl-step"><div class="tl-num">5</div><div class="tl-body"><b>Webhook confirms and settles</b><small>payment_intent.succeeded → booking CONFIRMED, slot BOOKED, payout scheduled to the instructor's Stripe Connect account, FCM notification sent.</small></div></div>
+      <div class="tl-step"><div class="tl-num">6</div><div class="tl-body"><b>Sync into Room</b><small>App refreshes the booking; UI switches from pending to confirmed. Conflicts always resolve in favour of the server.</small></div></div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="card">
+      <h3>Gradle modules</h3>
+      <table>
+        <tr><td><code>:app</code></td><td>Navigation, theme, entry point</td></tr>
+        <tr><td><code>:core:model</code></td><td>User, Instructor, Lesson, Booking, Review, Post</td></tr>
+        <tr><td><code>:core:database</code></td><td>Room entities, DAOs, migrations, outbox</td></tr>
+        <tr><td><code>:core:network</code></td><td>Retrofit clients, DTOs, interceptors</td></tr>
+        <tr><td><code>:core:datastore</code></td><td>Settings, session, secure token store</td></tr>
+        <tr><td><code>:feature:*</code></td><td>auth, discovery, booking, review, forum, dashboard, support, admin</td></tr>
+      </table>
+      <p class="muted" style="font-size:12px;margin:12px 0 0">Baseline: minSdk 26, latest stable compile/target SDK, Kotlin 2.x, Compose BOM via Gradle version catalog.</p>
+    </div>
+    <div class="card">
+      <h3>Key API surface</h3>
+      <table>
+        <tr><th>Method / path</th><th>Purpose</th></tr>
+        <tr><td>POST /auth/v1/signup · token · recover</td><td>Register, login, password reset</td></tr>
+        <tr><td>GET /rest/v1/lesson_listings</td><td>Filter listings by style, city, level</td></tr>
+        <tr><td>POST /functions/v1/search</td><td>Search and autocomplete</td></tr>
+        <tr><td>POST /functions/v1/match-instructors</td><td>Ranked matches with explained score</td></tr>
+        <tr><td>POST /functions/v1/create-booking</td><td>Hold slot + PaymentIntent</td></tr>
+        <tr><td>POST /functions/v1/confirm-booking</td><td>Webhook-confirmed booking state</td></tr>
+        <tr><td>GET /functions/v1/analytics/dashboard</td><td>Today/Week/Month dashboard data</td></tr>
+        <tr><td>GET /functions/v1/reports/sales</td><td>Instructor/admin aggregates</td></tr>
+        <tr><td>POST /rest/v1/reviews · reports · disputes · support_tickets</td><td>Trust and support writes</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Data model &amp; offline behaviour</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Room / SQLite tables</h3>
+      <table>
+        <tr><th>Group</th><th>Tables</th></tr>
+        <tr><td>Identity</td><td>users, instructor_profiles, martial_art_styles, credentials</td></tr>
+        <tr><td><b>Gym program</b></td><td><b>gyms, gym_programs, program_schedules, coach_requirements</b></td></tr>
+        <tr><td>Marketplace</td><td>lesson_listings, availability_slots, bookings, payments, payouts</td></tr>
+        <tr><td>Trust</td><td>reviews, review_media, reports, disputes, support_tickets</td></tr>
+        <tr><td>Community</td><td>forum_groups, group_members, posts, comments, post_likes</td></tr>
+        <tr><td>System</td><td>notifications, analytics_events, dashboard_widgets, outbox</td></tr>
+      </table>
+      <div class="callout">Indexes on <code>bookings(student_id, starts_at)</code>, <code>availability_slots(listing_id, starts_at)</code>, <code>posts(group_id, created_at)</code> and <code>reviews(instructor_id, rating)</code>. Foreign keys on; versioned migrations from v1.</div>
+      <div class="callout" style="border-color:#b56a0b;background:#fdf1dd;color:#6b4b17"><b>Gym-specific fields:</b> <code>gym_programs</code> stores day_of_week, style_id, title and ruleset (ADCC / ACBJJ Battle Jiu-Jitsu / Gi / No-Gi / open mat); <code>coach_requirements</code> stores required_style, minimum_credential, ruleset_experience, budget_cents and status; <code>credentials</code> stores type, issuing_body, rank or licence number, verified_by and document_url. All credential documents are validated by admins before a coach appears in shortlists.</div>
+    </div>
+    <div class="card">
+      <h3>Offline write queue</h3>
+      <p class="muted">Local mutations are inserted into <code>outbox</code> with an idempotency key. WorkManager replays them under network constraints; the server rejects stale versions and returns conflict errors.</p>
+      <div class="stack">
+        <div class="node"><b>Editable offline</b><small>Profile, post, review text, support ticket, report — saved locally and queued</small></div>
+        <div class="node"><b>Requires network</b><small>Search/autocomplete, booking, payment authorisation</small></div>
+        <div class="node primary"><b>Conflict policy</b><small>Server wins for bookings and payments; field-level last-write-wins for profile and post text</small></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Matching score — documented in the UI</h3>
+    <div class="grid3">
+      <div class="metric"><strong>30%</strong><span>Style match</span></div>
+      <div class="metric"><strong>25%</strong><span>Availability overlap</span></div>
+      <div class="metric"><strong>15%</strong><span>Distance from student</span></div>
+      <div class="metric"><strong>15%</strong><span>Rating &amp; review quality</span></div>
+      <div class="metric"><strong>10%</strong><span>Price fit vs budget</span></div>
+      <div class="metric"><strong>5%</strong><span>Verification &amp; response rate</span></div>
+    </div>
+    <p class="muted" style="font-size:12px;margin:14px 0 0">Computed server-side in <code>/functions/v1/match-instructors</code>; the client displays factor breakdowns so rankings stay explainable and defensible. For gym sourcing, an additional <b>mandatory gate</b> runs first: the coach must hold the requested verified credential (for example Judo black belt or Kyokushin black belt) and the required ruleset experience (ADCC or ACBJJ Battle Jiu-Jitsu). Only gated candidates are scored.</p>
+  </div>
+</section>
+
+<section id="security">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Security, accessibility &amp; quality</h2></div>
+  <div class="grid3">
+    <div class="card"><h3>Security &amp; privacy</h3><ul style="margin:0;padding-left:18px;font-size:13px">
+      <li>Access/refresh tokens in Keystore-backed storage; cleared on logout.</li>
+      <li>HTTPS only; certificate pinning for production.</li>
+      <li>RLS: users own rows only, students own bookings, instructors own listings, reviews tied to completed bookings.</li>
+      <li>Upload allowlists: 10 MB images, 100 MB videos, server re-scan.</li>
+      <li>Runtime permissions requested just-in-time; PDPA-aligned notice and deletion requests.</li>
+    </ul></div>
+    <div class="card"><h3>Accessibility</h3><ul style="margin:0;padding-left:18px;font-size:13px">
+      <li>Minimum 48 dp touch targets across the app.</li>
+      <li>TalkBack labels for icon buttons, ratings and status chips.</li>
+      <li>Text scaling support; no information conveyed by colour alone.</li>
+      <li>Keyboard/focus order tested for Compose navigation.</li>
+      <li>Accessibility Scanner in the release checklist.</li>
+    </ul></div>
+    <div class="card"><h3>Testing plan</h3><ul style="margin:0;padding-left:18px;font-size:13px">
+      <li>Unit: ViewModels, price/commission, score formatter.</li>
+      <li>Room: DAO, migrations, foreign keys, outbox replay.</li>
+      <li>Network: MockWebServer contracts and error mapping.</li>
+      <li>Compose UI: navigation and form validation tests.</li>
+      <li>E2E: Maestro register → search → book → pay → review; join → post → comment.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="delivery">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Delivery plan &amp; acceptance</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Implementation roadmap</h3>
+      <div class="timeline">
+        <div class="tl-step"><div class="tl-num">1</div><div class="tl-body"><b>Project setup</b><small>Version catalog, modules, Hilt, Room, Retrofit, theme and navigation skeleton.</small></div></div>
+        <div class="tl-step"><div class="tl-num">2</div><div class="tl-body"><b>Auth &amp; profile</b><small>Sign-up/login/reset, session restore, profile CRUD, secure token store.</small></div></div>
+        <div class="tl-step"><div class="tl-num">3</div><div class="tl-body"><b>Gym-first discovery</b><small>Six focus styles, weekly curriculum, coach requirements, credential-gated search and shortlist, coach detail. This is the first usable release for the BJJ gym.</small></div></div>
+        <div class="tl-step"><div class="tl-num">4</div><div class="tl-body"><b>Booking &amp; payment</b><small>Ruleset-aware availability, create/pay/confirm, Stripe test mode, gym bookings list.</small></div></div>
+        <div class="tl-step"><div class="tl-num">5</div><div class="tl-body"><b>Trust layer</b><small>Reviews, disputes, reports, support tickets and moderation states.</small></div></div>
+        <div class="tl-step"><div class="tl-num">6</div><div class="tl-body"><b>Community &amp; insights</b><small>Groups, feed, comments, likes, FCM, dashboard widgets, sales report.</small></div></div>
+        <div class="tl-step"><div class="tl-num">7</div><div class="tl-body"><b>Hardening &amp; release</b><small>Offline sync, error states, accessibility, performance, Play Store checklist.</small></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Acceptance criteria for the Android client</h3>
+      <table>
+        <tr><td>1</td><td>New user registers, logs out, resets a password and restores a session after restart.</td></tr>
+        <tr><td>2</td><td>Instructor publishes a lesson and availability slots that appear in student search.</td></tr>
+        <tr><td>3</td><td>Student searches, opens an instructor, selects a slot, pays with a Stripe test card and sees a confirmed booking.</td></tr>
+        <tr><td>4</td><td>A completed booking can be rated once with text and optional media.</td></tr>
+        <tr><td>5</td><td>Reports, disputes and support tickets submit offline and sync when connectivity returns.</td></tr>
+        <tr><td>6</td><td>Forum posts, comments and likes work with role-aware access and optimistic UI.</td></tr>
+        <tr><td>7</td><td>Dashboard widgets toggle and reorder, with Today/Week/Month ranges.</td></tr>
+        <tr><td>8</td><td>No payment secrets or other users' private data are stored in SQLite.</td></tr>
+        <tr><td>9</td><td>The gym can publish the Mon–Sun curriculum and see four open coach requirements with mandatory credentials and rulesets.</td></tr>
+        <tr><td>10</td><td>Coach shortlists exclude candidates without a verified Judo / Kyokushin black belt or equivalent credential, and show ADCC / ACBJJ Battle Jiu-Jitsu experience where required.</td></tr>
+        <tr><td>11</td><td>A coach can be booked for Wed Judo, Thu Wrestling (ADCC) or Fri Striking (ACBJJ Battle Jiu-Jitsu) with the correct ruleset stored on the booking.</td></tr>
+      </table>
+      <div class="callout"><b>Next step:</b> approve this gym-first design, then generate the Android Studio project skeleton (Gradle version catalog, module structure, theme, navigation, Room entities including gym program tables, and API interfaces) as a working Kotlin/Compose starting point.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap">MoMA Android application design solution · Derived from <b>MoMA_Android_App_Design.md</b> and the Assignment 2 brief. Diagrams and screens are design artefacts for implementation planning.</div></footer>
+
+<script>
+const starSvg = (on) => '<svg viewBox="0 0 24 24">' +
+  '<path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z" fill="' +
+  (on ? '#e0a72a' : '#ffffff') + '" stroke="' + (on ? '#c98f14' : '#b9c8bf') + '" stroke-width="1.4"/></svg>';
+
+function appbar(title, extra){
+  return '<div class="appbar"><button class="back" data-nav="back">&#8249;</button><h3>' + title + '</h3>' +
+    (extra ? '<span class="mini">' + extra + '</span>' : '') + '</div>';
+}
+function icard(name, sub, meta, price, rating, avatar, nav){
+  return '<div class="icard" data-nav="' + nav + '"><div class="icard-top"><div class="avatar ' + avatar + '">' +
+    name.split(' ').map(function(w){return w[0]}).join('').slice(0,2) + '</div><div><b>' + name + '</b><small>' + sub + '</small>' +
+    '<div style="margin-top:4px"><span class="verified">Verified</span> <span class="rating">★ ' + rating + '</span></div></div></div>' +
+    '<div class="rowline"><small>' + meta + '</small><span class="price">' + price + '</span></div></div>';
+}
+function listRow(icon, title, sub, nav, right){
+  return '<div class="listrow" data-nav="' + nav + '"><div class="avatar" style="width:30px;height:30px;font-size:10px">' + icon + '</div>' +
+    '<div class="txt"><b>' + title + '</b><small>' + sub + '</small></div>' + (right || '<span class="chev">›</span>') + '</div>';
+}
+function field(label, placeholder, type){
+  return '<div class="field"><label>' + label + '</label><input type="' + (type || 'text') + '" placeholder="' + placeholder + '" /></div>';
+}
+function tabs(group, items){
+  return '<div class="tabrow">' + items.map(function(it,i){
+    return '<button data-tab="' + group + '" data-panel="' + it.id + '" class="' + (i === 0 ? 'active' : '') + '">' + it.label + '</button>';
+  }).join('') + '</div>';
+}
+function panel(group, id, html){
+  return '<div data-panel-group="' + group + '" data-panel="' + id + '" style="' + (id === 'upcoming' || id === 'suggested' || id === 'today' ? '' : 'display:none') + '">' + html + '</div>';
+}
+
+const S = {};
+
+/* ---- Student: onboarding and auth ---- */
+S.onboard = {flow:'student', auth:true, title:'Splash / Onboarding', purpose:'Establish brand and offer a clear entry into registration or sign-in.',
+ elements:['MoMA brand mark','One-line value proposition','Get started and Sign in actions'], behaviour:'First launch only; session restore skips directly to Home.', source:'Brief p.4 / derived splash',
+ render:()=> '<div class="center"><div class="brandcircle">MoMA</div><h1>Train with the best.<br/>On your schedule.</h1><p style="margin-top:8px">Book verified martial arts instructors near you.</p></div>' +
+   '<button class="btn" data-nav="register">Get started</button><button class="btn ghost" data-nav="login">I already have an account</button>' +
+   '<p class="center" style="margin-top:22px;font-size:10px">By continuing you agree to the Terms of Service and Privacy Policy.</p>'};
+
+S.login = {flow:'student', auth:true, title:'Login', purpose:'Authenticate returning users and restore a secure session.',
+ elements:['Email + password','Password visibility toggle','Google / Facebook social login','Forgot password and Register links'], behaviour:'Calls Supabase token endpoint; JWT stored in Keystore-backed storage; routes by role claim.', source:'Brief p.4',
+ render:()=> appbar('Welcome back','Sign in') + '<div class="center" style="margin:4px 0 14px"><div class="brandcircle" style="width:56px;height:56px;margin:0 auto;font-size:15px">MoMA</div></div>' +
+   field('Email','name@example.com','email') + field('Password','Enter your password','password') +
+   '<div style="text-align:right;margin:-4px 0 6px"><button class="linklike" data-nav="forgot">Forgot password?</button></div>' +
+   '<button class="btn dark" data-nav="home">Sign In</button><div class="center" style="font-size:10px;color:#8aa094;margin:12px 0 4px">or use one of your social profiles</div>' +
+   '<div class="social"><button>Google</button><button>Facebook</button></div>' +
+   '<p class="center" style="margin-top:16px">New here? <button class="linklike" data-nav="register">Create account</button></p>'};
+
+S.register = {flow:'student', auth:true, title:'Register', purpose:'Create a MoMA account and choose the account role.',
+ elements:['Full name, phone, email, password','Student / Instructor role choice','Social sign-up','Terms notice'], behaviour:'Supabase Auth signup, profile row creation, privacy notice accepted before submit.', source:'Brief p.4',
+ render:()=> appbar('Join MoMA','Step 1 of 1') + '<h1>Create your account</h1><p>Start training or start teaching in minutes.</p>' +
+   field('Full name','Your name') + field('Phone','012-345 6789','tel') + field('Email','name@example.com','email') + field('Password','At least 8 characters','password') +
+   '<div class="field"><label>I want to</label><div class="chiprow"><button class="mini-chip active">Learn as a student</button><button class="mini-chip">Teach as an instructor</button></div></div>' +
+   '<button class="btn dark" data-nav="home">Continue</button><div class="social"><button>Google</button><button>Facebook</button></div>' +
+   '<p class="center" style="font-size:10px;margin-top:14px">Have an account? <button class="linklike" data-nav="login">Sign in</button></p>'};
+
+S.forgot = {flow:'student', auth:true, title:'Forgot password', purpose:'Password recovery without revealing whether an account exists.',
+ elements:['Email field','Reset password action','Neutral confirmation state'], behaviour:'POST /auth/v1/recover; always shows a neutral success message.', source:'Brief p.4',
+ render:()=> appbar('Reset password') + '<h1>Forgot your password?</h1><p>We will email you a secure reset link.</p>' +
+   field('Email','name@example.com','email') + '<button class="btn dark" data-nav="login">Send reset link</button>' +
+   '<button class="btn ghost" data-nav="login">Back to sign in</button>'};
+
+/* ---- Student: core journeys ---- */
+S.home = {flow:'student', title:'Home / focus styles', purpose:'Discovery entry point limited to the BJJ gym’s six current styles and four hiring needs.',
+ elements:['Greeting and search entry','Six focus style tiles','Recommended coaches for the gym program','Nearby coaches'], behaviour:'Reads cached Room data first; refreshes from API with a "saved data" banner when offline. Non-focus styles are hidden in release 1.', source:'Brief p.6 / gym-first scope',
+ render:()=> '<div class="appbar"><h3 style="font-size:16px">MoMA <span class="tag">BJJ gym</span></h3><span class="mini">JB, MY</span></div>' +
+   '<h1 style="font-size:20px">Build your weekly team</h1><p>Focus styles for the current program.</p>' +
+   '<div class="searchbox" data-nav="search"><div class="mag"></div><span>Search Judo, Wrestling, Kyokushin, Muay Thai</span></div>' +
+   '<h2>Focus styles</h2><div class="tiles">' + [
+     ['BJJ Gi','#1c8a63'],['BJJ No-Gi','#2d7d6a'],['Judo','#a1632c'],['Wrestling','#315f9c'],['Kyokushin','#8a4b4b'],['Muay Thai','#6a5aa8']
+   ].map(function(t){return '<div class="tile" data-nav="search"><div class="dot" style="background:linear-gradient(135deg,' + t[1] + ',#7dc7a8)">' + t[0].slice(0,2) + '</div><span>' + t[0] + '</span></div>'}).join('') + '</div>' +
+   '<h2>Needed for your program</h2>' +
+   icard('Kenji Watanabe','Judo 4th dan black belt','Wed · Judo for BJJ','RM 150 / hr','5.0','','coach_profile') +
+   icard('Mei Ling Tan','Muay Thai coach · licensed','Fri · Striking / ACBJJ','RM 130 / hr','4.8','warm','coach_profile') +
+   '<h2>Also shortlisted</h2>' + icard('Sanjay Rao','Kyokushin black belt','Fri · Striking / ACBJJ','RM 140 / hr','4.9','alt','coach_profile')};
+
+S.search = {flow:'student', title:'Coach search & discovery', purpose:'Find coaches for the six focus styles with credential and ruleset filters.',
+ elements:['Search input + suggestions','Filters: style, credential, ruleset, day, price','Result cards with verification badge','Matching shortcut'], behaviour:'Debounced /functions/v1/search; verified credential is a hard filter; online results cached into Room.', source:'Brief p.7 / gym-first scope',
+ render:()=> appbar('Search','Filters') +
+   '<div class="searchbox"><div class="mag"></div><input id="searchInput" placeholder="Try Judo black belt or ADCC" style="border:0;outline:none;background:transparent;font-size:12px;width:100%;color:#243b31" /></div>' +
+   '<div id="suggestions" style="display:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:11px;margin-top:4px">Judo for BJJ · Wrestling · ADCC · Kyokushin Karate · Muay Thai · ACBJJ Battle Jiu-Jitsu</div>' +
+   '<div class="chiprow" style="margin-top:10px"><button class="mini-chip active">All focus styles</button><button class="mini-chip">Black belt verified</button><button class="mini-chip">ADCC</button><button class="mini-chip">ACBJJ Battle Jiu-Jitsu</button><button class="mini-chip">Wed / Thu / Fri</button></div>' +
+   '<h2>Results <span class="muted" style="font-size:11px;font-weight:500">· verified coaches only</span></h2><div id="resultList">' +
+   icard('Kenji Watanabe','Judo 4th dan · BJJ throws','Wed 19:00 · Judo for BJJ','RM 150 / hr','5.0','','coach_profile') +
+   icard('Rafiq Uddin','Wrestler · ADCC ruleset','Thu 19:00 · No-Gi BJJ','RM 160 / hr','4.9','','coach_profile') +
+   icard('Sanjay Rao','Kyokushin black belt','Fri 19:00 · Striking / ACBJJ','RM 140 / hr','4.9','alt','coach_profile') +
+   icard('Mei Ling Tan','Muay Thai coach · licensed','Fri 20:00 · Striking / ACBJJ','RM 130 / hr','4.8','warm','coach_profile') + '</div>' +
+   '<button class="btn ghost" data-nav="matching">Not sure? Use Match Me</button>'};
+
+S.instructor = {flow:'student', title:'Coach detail & booking', purpose:'Evaluate a specialist coach against the gym requirement and choose a curriculum slot.',
+ elements:['Hero band with program and ruleset','Credential verification and rating','Bio, styles and qualifications','Program-aligned slot picker'], behaviour:'Slot picker calls create-booking; a 10-minute hold starts only on the server. Credential must be verified before booking is allowed.', source:'Brief p.6 / p.9 / gym requirements',
+ render:()=> '<div class="hero-band"><span class="band-label">JUDO FOR BJJ · WED 19:00</span></div>' + appbar('Coach profile','Verified') +
+   '<div class="icard-top"><div class="avatar" style="width:46px;height:46px">KW</div><div><b style="font-size:14px">Kenji Watanabe</b><small>Judo 4th dan black belt · 12 years</small><div style="margin-top:4px"><span class="verified">Black belt verified</span> <span class="rating">★ 5.0 (64 reviews)</span></div></div></div>' +
+   '<p style="margin-top:12px">Judo black belt specialising in throws, ukemi and grip fighting adapted for BJJ players. Works with gi and no-gi transitions for the Wednesday program.</p>' +
+   '<div class="chiprow"><span class="mini-chip active">Judo for BJJ</span><span class="mini-chip">Gi + No-Gi</span><span class="mini-chip">Beginner to advanced</span></div>' +
+   '<h2>Available this week</h2><div class="slotgrid"><button class="slot free" data-nav="checkout">Wed 19:00</button><button class="slot free" data-nav="checkout">Wed 20:00</button><button class="slot held">Wed 21:00</button><button class="slot booked">Sat 10:00</button></div>' +
+   '<h2>Credential check</h2><div class="summary"><div><span>Dan certificate</span><b>Verified</b></div><div><span>Coaching licence</span><b>Verified</b></div><div><span>Ruleset experience</span><b>Gi / No-Gi</b></div></div>' +
+   '<h2>Recent reviews</h2><div class="summary"><div><b>"Throws finally make sense in sparring."</b></div><small>Marcus · 5 stars · 2 weeks ago</small></div>' +
+   '<button class="btn" data-nav="checkout">Book Judo for BJJ · RM 150</button>'};
+
+S.matching = {flow:'student', title:'Credential-gated matching', purpose:'Rank coaches for a gym requirement after mandatory credential and ruleset checks.',
+ elements:['Style, credential, ruleset, day and budget inputs','Ranked coach cards with score','Gate explanation'], behaviour:'POST /functions/v1/match-instructors; hard gate on verified credential and ruleset before weighted scoring.', source:'Brief p.9 / gym requirements',
+ render:()=> appbar('Match me','Requirement') + '<h1>Find your coach</h1><p>Match against a program slot. Unverified coaches are excluded.</p>' +
+   '<div class="field"><label>Program style</label><select><option>Judo for BJJ</option><option>Wrestling for No-Gi BJJ</option><option>Striking for No-Gi BJJ</option><option>BJJ Gi</option><option>BJJ No-Gi</option></select></div>' +
+   '<div class="field"><label>Required credential</label><select><option>Judo black belt (verified)</option><option>Wrestler · competition record</option><option>Kyokushin black belt (verified)</option><option>Muay Thai coach licence</option></select></div>' +
+   '<div class="field"><label>Ruleset</label><select><option>Gi / No-Gi</option><option>ADCC</option><option>ACBJJ Battle Jiu-Jitsu</option><option>Open mat</option></select></div>' +
+   field('Max budget (RM)','150') +
+   '<div class="chiprow" style="margin-top:6px"><button class="mini-chip">Mon</button><button class="mini-chip">Tue</button><button class="mini-chip active">Wed</button><button class="mini-chip active">Thu</button><button class="mini-chip active">Fri</button></div>' +
+   '<button class="btn" data-nav="matching">Find gated matches</button>' +
+   '<h2>Top matches</h2>' +
+   icard('Kenji Watanabe','96% · Judo black belt verified','Wed · Gi / No-Gi','RM 150 / hr','5.0','','coach_profile') +
+   icard('Sanjay Rao','89% · Kyokushin black belt','Fri · ACBJJ Battle Jiu-Jitsu','RM 140 / hr','4.9','alt','coach_profile') +
+   '<div class="summary"><div><span>Mandatory gate</span><b>Verified credential + ruleset</b></div></div>' +
+   '<div class="summary"><small>Score = style 30% + availability 25% + distance 15% + rating 15% + price 10% + verification 5%. Computed on the server, after the gate.</small></div>'};
+
+S.checkout = {flow:'student', title:'Checkout — 4 steps', purpose:'Move from lesson and slot selection to a confirmed, paid booking.',
+ elements:['Step progress: Lesson → Slot → Payment → Review','Order summary with commission note','Payment method and Pay action'], behaviour:'Client collects intent; Stripe tokenises card; webhook confirms booking. Local state remains pending until server confirmation.', source:'Brief p.9',
+ render:()=> appbar('Checkout','Secure') +
+   '<div class="progress"><span class="step on">Lesson</span><span class="pip on"></span><span class="step on">Slot</span><span class="pip on"></span><span class="step on">Payment</span><span class="pip"></span><span class="step">Review</span></div>' +
+   '<div class="summary"><div><span>Program</span><b>Judo for BJJ · 60 min</b></div><div><span>Coach</span><b>Kenji Watanabe · black belt</b></div><div><span>Ruleset</span><b>Gi / No-Gi</b></div><div><span>When</span><b>Wed 19:00</b></div><div><span>Where</span><b>Gym · Johor Bahru</b></div></div>' +
+   '<h2>Payment method</h2><div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">V</div><div class="txt"><b>Visa ending 4242</b><small>Expires 08/28</small></div><span class="chev">›</span></div>' +
+   '<div class="summary"><div><span>Lesson price</span><b>RM 150.00</b></div><div><span>Service fee (15%)</span><b>Included</b></div><div class="total"><span>Total today</span><span>RM 150.00</span></div></div>' +
+   '<button class="btn" data-nav="bookings">Pay RM 150.00 securely</button>' +
+   '<p class="center" style="font-size:10px">Card details are handled by Stripe. MoMA never stores your card number.</p>'};
+
+S.bookings = {flow:'student', title:'Bookings', purpose:'Track booking state and expose next actions such as review or dispute.',
+ elements:['Upcoming / Completed / Cancelled tabs','Status chips','Lesson details, review, dispute and cancel actions'], behaviour:'Observes Room bookings; live status refreshed from API; server state always wins.', source:'Derived from payment flow',
+ render:()=> appbar('My bookings') + '<h1 style="font-size:20px">Bookings</h1>' +
+   tabs('bk',[{id:'upcoming',label:'Upcoming'},{id:'completed',label:'Completed'},{id:'cancelled',label:'Cancelled'}]) +
+   panel('bk','upcoming',
+     '<div class="icard"><div class="rowline"><b>Judo for BJJ</b><span class="status">CONFIRMED</span></div><small>Kenji Watanabe · Wed 19:00 · Gi / No-Gi</small><div class="rowline"><small>RM 150.00 · paid</small><button class="btn ghost small" data-nav="coach_profile">View details</button></div></div>' +
+     '<div class="icard"><div class="rowline"><b>Striking for No-Gi BJJ</b><span class="status warn">PENDING</span></div><small>Mei Ling Tan · Fri 20:00 · ACBJJ Battle Jiu-Jitsu</small><div class="rowline"><small>Awaiting payment confirmation</small><button class="btn small" data-nav="checkout">Complete payment</button></div></div>') +
+   panel('bk','completed',
+     '<div class="icard"><div class="rowline"><b>Wrestling for No-Gi BJJ</b><span class="status info">COMPLETED</span></div><small>Rafiq Uddin · Thu 19:00 · ADCC</small><div class="rowline"><small>RM 160.00</small><button class="btn small" data-nav="review">Rate session</button></div></div>' +
+     '<div class="icard"><div class="rowline"><b>BJJ Gi open mat</b><span class="status info">COMPLETED</span></div><small>Internal coach · Sat 10:00 · Gi</small><div class="rowline"><small>Included in membership</small><button class="btn ghost small" data-nav="dispute">Raise dispute</button></div></div>') +
+   panel('bk','cancelled', '<div class="icard"><div class="rowline"><b>Muay Thai private</b><span class="status warn">CANCELLED</span></div><small>Mei Ling Tan · 20 Oct · refunded RM 130.00</small></div>')};
+
+S.review = {flow:'student', title:'Rating & review composer', purpose:'Collect a verified review only from a student of a completed booking.',
+ elements:['5-star rating','Quick tags','Text and optional media','Submit with offline queue'], behaviour:'Unique constraint on booking_id; media uploads queued and retried by WorkManager.', source:'Brief p.10',
+ render:()=> appbar('Rate your session') + '<div class="center"><h1 style="font-size:19px">How was your session?</h1><p>Rafiq Uddin · Wrestling for No-Gi BJJ · ADCC</p></div>' +
+   '<div class="starrow" id="starrow">' + [1,2,3,4,5].map(function(n){return '<button data-star="' + n + '">' + starSvg(false) + '</button>'}).join('') + '</div>' +
+   '<p class="center" id="starLabel" style="font-size:11px">Tap a star to rate</p>' +
+   '<h2>What stood out?</h2><div class="chiprow"><button class="mini-chip">Helpful</button><button class="mini-chip">Easy to learn</button><button class="mini-chip">Punctual</button><button class="mini-chip">Great venue</button><button class="mini-chip">Good value</button></div>' +
+   '<div class="field" style="margin-top:12px"><label>Your review</label><textarea placeholder="Share what you learned and who this lesson suits..."></textarea></div>' +
+   '<div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">+</div><div class="txt"><b>Add photo or video</b><small>Optional · max 100 MB</small></div></div>' +
+   '<button class="btn" data-nav="bookings">Submit review</button>'};
+
+S.dashboard = {flow:'student', title:'Training dashboard', purpose:'Show personal progress and let users configure their widgets.',
+ elements:['Today / Week / Month tabs','Sessions, duration and intensity cards','Activity chart','Custom widget order'], behaviour:'GET /functions/v1/analytics/dashboard; widget preferences stored locally and synced.', source:'Brief p.11',
+ render:()=> appbar('My progress','Widgets') + '<h1 style="font-size:20px">Your training</h1>' +
+   tabs('dash',[{id:'today',label:'Today'},{id:'week',label:'Week'},{id:'month',label:'Month'}]) +
+   panel('dash','today','<div class="statgrid"><div class="stat"><b>1</b><small>Session today</small></div><div class="stat"><b>60m</b><small>Training time</small></div><div class="stat"><b>Medium</b><small>Intensity</small></div><div class="stat"><b>320</b><small>Calories est.</small></div></div><h2>Last 7 days</h2>' +
+     '<div class="bars">' + [38,55,42,70,48,86,64].map(function(h){return '<div style="flex:1"><i style="height:' + h + '%"></i><span>' + ['M','T','W','T','F','S','S'][[38,55,42,70,48,86,64].indexOf(h)] + '</span></div>'}).join('') + '</div>') +
+   panel('dash','week','<div class="statgrid"><div class="stat"><b>4</b><small>Sessions this week</small></div><div class="stat"><b>3h 40m</b><small>Training time</small></div><div class="stat"><b>1,120</b><small>Calories est.</small></div><div class="stat"><b>+8%</b><small>vs last week</small></div></div><h2>Weekly consistency</h2><div class="bars"><div style="flex:1"><i style="height:45%"></i><span>W1</span></div><div style="flex:1"><i style="height:60%"></i><span>W2</span></div><div style="flex:1"><i style="height:72%"></i><span>W3</span></div><div style="flex:1"><i style="height:85%"></i><span>W4</span></div></div>') +
+   panel('dash','month','<div class="statgrid"><div class="stat"><b>16</b><small>Sessions this month</small></div><div class="stat"><b>14h 20m</b><small>Training time</small></div><div class="stat"><b>4.9</b><small>Avg rating given</small></div><div class="stat"><b>3</b><small>Styles practised</small></div></div><h2>Monthly goal</h2><div class="summary"><div><span>16 of 20 sessions</span><b>80%</b></div></div>') +
+   '<h2>Widgets</h2>' + listRow('S','Sessions &amp; duration','On · position 1','dashboard','<div class="toggle on"></div>') +
+   listRow('C','Calories estimate','On · position 2','dashboard','<div class="toggle on"></div>') +
+   listRow('G','Goal streak','Off · tap to enable','dashboard','<div class="toggle"></div>')};
+
+S.profile = {flow:'student', title:'Profile', purpose:'Own profile for students; public portfolio and management entry for instructors.',
+ elements:['Avatar, name and role badge','Bio, styles and qualifications','Stats and portfolio media','Settings, support and role-specific entries'], behaviour:'Edits sync through the outbox; instructor portfolio is public and role-gated for editing.', source:'Brief p.5',
+ render:()=> appbar('Profile','Edit') + '<div class="center"><div class="avatar" style="width:66px;height:66px;font-size:19px;margin:0 auto">AN</div><h1 style="font-size:18px;margin-top:10px">Aina Nadirah</h1><p><span class="tag">Student</span> · Johor Bahru</p></div>' +
+   '<div class="statgrid" style="margin-top:14px"><div class="stat"><b>12</b><small>Lessons taken</small></div><div class="stat"><b>4.8</b><small>Student rating</small></div></div>' +
+   '<h2>About</h2><p>Beginner BJJ practitioner aiming to train consistently twice a week.</p>' +
+   '<h2>Account</h2>' + listRow('E','Edit profile','Name, bio, contact details','profile') +
+   listRow('P','Privacy &amp; data','PDPA notice and deletion request','support') +
+   listRow('N','Notifications','Booking, payment and group alerts','support') +
+   listRow('H','Help &amp; support','Contact MoMA team','support') +
+   listRow('I','Coach workspace','Switch role view','instructor_home') +
+   '<button class="btn ghost" data-nav="login">Sign out</button>'};
+
+/* ---- First stakeholder: BJJ gym journey ---- */
+S.gym_home = {flow:'gym', title:'Gym home — program coverage', purpose:'Owner dashboard for staffing the seven-day BJJ curriculum and tracking the four open coach roles.',
+ elements:['Coverage KPIs','Open coach requirements by day','Curriculum and candidate shortcuts'], behaviour:'All data scoped to the gym id via RLS; shortlists only include verified credentials.', source:'Stakeholder brief: gym hiring four coaches',
+ render:()=> appbar('MoMA Gym','Owner') + '<h1 style="font-size:20px">Build your team</h1><p>Four specialist roles for the weekly program.</p>' +
+   '<div class="statgrid"><div class="stat"><b>4</b><small>Open roles</small></div><div class="stat"><b>11</b><small>Verified candidates</small></div><div class="stat"><b>7</b><small>Days programmed</small></div><div class="stat"><b>2</b><small>Internal BJJ coaches</small></div></div>' +
+   '<h2>Open requirements</h2>' +
+   '<div class="icard"><div class="rowline"><b>Wed · Judo black belt</b><span class="status warn">HIRING</span></div><small>Judo for BJJ · Gi / No-Gi</small></div>' +
+   '<div class="icard"><div class="rowline"><b>Thu · Wrestler</b><span class="status warn">HIRING</span></div><small>Wrestling for No-Gi BJJ · ADCC</small></div>' +
+   '<div class="icard"><div class="rowline"><b>Fri · Kyokushin + Muay Thai</b><span class="status warn">HIRING</span></div><small>Striking for No-Gi BJJ · ACBJJ Battle Jiu-Jitsu</small></div>' +
+   '<h2>Manage</h2>' + listRow('C','Weekly curriculum','Mon–Sun program and rulesets','gym_curriculum') +
+   listRow('S','Coach shortlist','Credential-gated candidates','coach_shortlist') +
+   listRow('+','Post a requirement','Hire for a program slot','gym_post_role') +
+   listRow('B','Program bookings','Confirmed coach sessions','bookings')};
+
+S.gym_curriculum = {flow:'gym', title:'Weekly curriculum', purpose:'Publish and review the gym’s Mon–Sun program with ruleset tags and coach coverage.',
+ elements:['Seven-day program list','Style and ruleset per day','Coverage status and edit action'], behaviour:'Stored in gym_programs / program_schedules; cached in Room; changes sync via outbox.', source:'Stakeholder brief: Mon–Sun curriculum',
+ render:()=> appbar('Weekly curriculum','Edit') + '<h1 style="font-size:19px">Program schedule</h1><p>Current weekly plan and ruleset focus.</p>' +
+   '<div class="summary"><div><span>Mon</span><b>BJJ Gi</b></div><small>Internal BJJ coach · Gi</small></div>' +
+   '<div class="summary"><div><span>Tue</span><b>BJJ No-Gi</b></div><small>Internal BJJ coach · No-Gi</small></div>' +
+   '<div class="summary"><div><span>Wed</span><b>Judo for BJJ</b></div><small><span class="tag amber">Hiring: Judo black belt</span></small></div>' +
+   '<div class="summary"><div><span>Thu</span><b>Wrestling for No-Gi BJJ</b></div><small><span class="tag amber">Hiring: Wrestler · ADCC</span></small></div>' +
+   '<div class="summary"><div><span>Fri</span><b>Striking for No-Gi BJJ</b></div><small><span class="tag amber">Hiring: Kyokushin + Muay Thai · ACBJJ Battle Jiu-Jitsu</span></small></div>' +
+   '<div class="summary"><div><span>Sat</span><b>BJJ Gi open mat</b></div><small>Open supervision · Gi</small></div>' +
+   '<div class="summary"><div><span>Sun</span><b>BJJ No-Gi open mat</b></div><small>Open supervision · No-Gi</small></div>' +
+   '<button class="btn" data-nav="coach_shortlist">Fill open roles</button>'};
+
+S.coach_shortlist = {flow:'gym', title:'Coach shortlist', purpose:'Review candidates for the four roles after mandatory credential and ruleset screening.',
+ elements:['Role filter chips','Ranked candidate cards','Credential badges and match score'], behaviour:'Candidates without a verified required credential never appear; score breakdown is explained on coach profile.', source:'Gym requirements / matching area',
+ render:()=> appbar('Coach shortlist','11 found') + '<h1 style="font-size:19px">Verified candidates</h1>' +
+   '<div class="chiprow"><button class="mini-chip active">All roles</button><button class="mini-chip">Judo</button><button class="mini-chip">Wrestling</button><button class="mini-chip">Kyokushin</button><button class="mini-chip">Muay Thai</button></div>' +
+   icard('Kenji Watanabe','96% · Judo 4th dan verified','Wed 19:00 · Gi / No-Gi','RM 150 / hr','5.0','','coach_profile') +
+   icard('Rafiq Uddin','93% · Wrestler · ADCC record','Thu 19:00 · ADCC','RM 160 / hr','4.9','','coach_profile') +
+   icard('Sanjay Rao','89% · Kyokushin black belt','Fri 19:00 · ACBJJ','RM 140 / hr','4.9','alt','coach_profile') +
+   icard('Mei Ling Tan','87% · Muay Thai coach licence','Fri 20:00 · ACBJJ','RM 130 / hr','4.8','warm','coach_profile') +
+   '<button class="btn ghost" data-nav="gym_post_role">Post another requirement</button>'};
+
+S.coach_profile = {flow:'gym', title:'Gym coach evaluation', purpose:'Inspect a candidate’s verified credentials, ruleset experience and fit before making an offer.',
+ elements:['Credential documents and verification state','Ruleset experience','Program availability','Offer / book action'], behaviour:'Credential state comes from admin verification; booking is only enabled when the gate passes.', source:'Gym requirements / credential verification',
+ render:()=> appbar('Candidate profile','Verified') + '<div class="hero-band" style="height:88px"><span class="band-label">JUDO FOR BJJ · WED PROGRAM</span></div>' +
+   '<div class="icard-top"><div class="avatar" style="width:46px;height:46px">KW</div><div><b style="font-size:14px">Kenji Watanabe</b><small>Judo 4th dan black belt · 12 years</small><div style="margin-top:4px"><span class="verified">Dan certificate verified</span> <span class="rating">★ 5.0</span></div></div></div>' +
+   '<div class="summary"><div><span>Style fit</span><b>30 / 30</b></div><div><span>Availability overlap</span><b>25 / 25 · Wed 19:00</b></div><div><span>Credential</span><b>Black belt verified</b></div><div><span>Ruleset</span><b>Gi / No-Gi for BJJ</b></div></div>' +
+   '<h2>Documents</h2>' + listRow('D','Dan grade certificate','Issued by recognised judo body','coach_profile','<span class="status">VERIFIED</span>') +
+   listRow('C','Coaching licence','Valid · checked by MoMA admin','coach_profile','<span class="status">VERIFIED</span>') +
+   '<button class="btn" data-nav="checkout">Offer Wed session · RM 150</button>' +
+   '<button class="btn ghost" data-nav="coach_shortlist">Back to shortlist</button>'};
+
+S.gym_post_role = {flow:'gym', title:'Post coach requirement', purpose:'Create a hiring requirement for a program slot with a mandatory credential and ruleset.',
+ elements:['Program day and style','Required credential','Ruleset and budget','Publish action'], behaviour:'Writes coach_requirements; matching gate reads these fields; stored locally and queued when offline.', source:'Gym requirements / derived content management',
+ render:()=> appbar('Post a requirement','Draft') + '<h1 style="font-size:19px">Find a specialist</h1>' +
+   '<div class="field"><label>Program</label><select><option>Judo for BJJ</option><option>Wrestling for No-Gi BJJ</option><option>Striking for No-Gi BJJ</option></select></div>' +
+   '<div class="field"><label>Day and time</label><input value="Wednesday, 19:00" /></div>' +
+   '<div class="field"><label>Required credential</label><select><option>Judo black belt (verified)</option><option>Wrestler · competition record</option><option>Kyokushin black belt (verified)</option><option>Muay Thai coach licence</option></select></div>' +
+   '<div class="field"><label>Ruleset</label><select><option>Gi / No-Gi</option><option>ADCC</option><option>ACBJJ Battle Jiu-Jitsu</option></select></div>' +
+   field('Budget per session (RM)','150') +
+   '<div class="callout" style="font-size:11px">Only coaches whose credential is verified by MoMA admins can be matched to this requirement.</div>' +
+   '<button class="btn" data-nav="gym_home">Publish requirement</button>'};
+
+/* ---- Instructor journey ---- */
+S.instructor_home = {flow:'instructor', auth:false, title:'Instructor home', purpose:'Daily operations hub for an instructor: bookings, earnings and quick publishing.',
+ elements:['Today stats','Upcoming schedule','Publish lesson and availability shortcuts','Sales report link'], behaviour:'All data filtered by the authenticated instructor id via RLS.', source:'Derived from Operations &amp; brief p.12',
+ render:()=> appbar('Instructor workspace','Today') + '<h1 style="font-size:20px">Good morning, Danial</h1><p>Your studio at a glance.</p>' +
+   '<div class="statgrid"><div class="stat"><b>3</b><small>Lessons today</small></div><div class="stat"><b>RM 360</b><small>Gross earnings</small></div><div class="stat"><b>4.9</b><small>Average rating</small></div><div class="stat"><b>82%</b><small>Response rate</small></div></div>' +
+   '<h2>Today’s schedule</h2>' +
+   '<div class="icard"><div class="rowline"><b>BJJ Fundamentals</b><span class="status">CONFIRMED</span></div><small>09:00 · 3 students · 60 min</small></div>' +
+   '<div class="icard"><div class="rowline"><b>Private technique session</b><span class="status info">BOOKED</span></div><small>15:00 · 1 student · 90 min</small></div>' +
+   '<h2>Quick actions</h2>' + listRow('+','Publish a lesson','Create a new listing','listing_edit') +
+   listRow('A','Set availability','Open weekly slot grid','availability') +
+   listRow('R','View sales report','Earnings and booking trends','sales_report') +
+   listRow('W','Payouts','Stripe Connect transfers','payouts')};
+
+S.listing_edit = {flow:'instructor', title:'Listing editor', purpose:'Create or edit a lesson listing that appears in student discovery.',
+ elements:['Title, style, level, duration, price','Description and city','Active toggle and publish action'], behaviour:'Writes to lesson_listings with owner RLS; changes appear in search after refresh.', source:'Brief p.6 content management',
+ render:()=> appbar('Lesson details','Draft') + '<h1 style="font-size:19px">Publish a lesson</h1>' +
+   field('Program title','Judo for BJJ') +
+   '<div class="field"><label>Focus style</label><select><option>BJJ Gi</option><option>BJJ No-Gi</option><option>Judo for BJJ</option><option>Wrestling for No-Gi BJJ</option><option>Kyokushin Karate</option><option>Muay Thai</option></select></div>' +
+   '<div class="field"><label>Ruleset</label><select><option>Gi / No-Gi</option><option>ADCC</option><option>ACBJJ Battle Jiu-Jitsu</option><option>Open mat</option></select></div>' +
+   '<div class="chiprow"><button class="mini-chip active">Beginner</button><button class="mini-chip">Intermediate</button><button class="mini-chip">Advanced</button></div>' +
+   '<div class="field" style="margin-top:10px"><label>Duration</label><select><option>60 minutes</option><option>90 minutes</option></select></div>' +
+   field('Price per hour (RM)','150') + field('City','Johor Bahru') +
+   '<div class="field"><label>Description</label><textarea>Small-group coaching focused on safe progression...</textarea></div>' +
+   '<div class="listrow"><div class="txt"><b>Listing active</b><small>Visible in search and matching</small></div><div class="toggle on"></div></div>' +
+   '<button class="btn" data-nav="instructor_home">Publish lesson</button>'};
+
+S.availability = {flow:'instructor', title:'Curriculum availability', purpose:'Align coach availability and slot states with the gym’s weekly program and rulesets.',
+ elements:['Seven-day program strip','Program-specific slots with FREE / HELD / BOOKED states','Ruleset tag per slot','Add slot action'], behaviour:'Slot status and version are server-managed; ruleset is stored on the booking; held slots expire after 10 minutes.', source:'Gym curriculum / booking flow',
+ render:()=> appbar('Weekly availability','Week 1') + '<h1 style="font-size:19px">Program slots</h1><p>Held slots release after 10 minutes if unpaid.</p>' +
+   '<div class="chiprow"><button class="mini-chip active">Mon</button><button class="mini-chip">Tue</button><button class="mini-chip active">Wed</button><button class="mini-chip active">Thu</button><button class="mini-chip active">Fri</button><button class="mini-chip">Sat</button><button class="mini-chip">Sun</button></div>' +
+   '<h2>Wed · Judo for BJJ</h2><div class="slotgrid"><button class="slot free" data-nav="checkout">19:00</button><button class="slot free" data-nav="checkout">20:00</button><button class="slot held">21:00</button></div>' +
+   '<h2>Thu · Wrestling for No-Gi BJJ</h2><div class="summary"><div><span>Ruleset</span><b>ADCC</b></div><div><span>Coach requirement</span><b>Wrestler</b></div></div><div class="slotgrid"><button class="slot free" data-nav="checkout">19:00</button><button class="slot booked">20:00</button></div>' +
+   '<h2>Fri · Striking for No-Gi BJJ</h2><div class="summary"><div><span>Ruleset</span><b>ACBJJ Battle Jiu-Jitsu</b></div><div><span>Coach requirement</span><b>Kyokushin + Muay Thai</b></div></div><div class="slotgrid"><button class="slot free" data-nav="checkout">19:00</button><button class="slot free" data-nav="checkout">20:00</button></div>' +
+   '<button class="btn" data-nav="instructor_home">Add program slot</button>'};
+
+S.sales_report = {flow:'instructor', title:'Sales report', purpose:'Show revenue, booking trends and lead performance for instructors and admins.',
+ elements:['Performance rings','Booking trend bars','Period tabs','Payout summary'], behaviour:'Server-generated aggregates from /functions/v1/reports/sales; no raw payment data on device.', source:'Brief p.12',
+ render:()=> appbar('Sales report','Export') +
+   tabs('sales',[{id:'today',label:'Today'},{id:'week',label:'Week'},{id:'month',label:'Month'}]) +
+   panel('sales','today','<div class="ring"><div>RM360</div></div><p class="center">Gross sales today</p><div class="statgrid"><div class="stat"><b>3</b><small>Bookings</small></div><div class="stat"><b>RM 54</b><small>Commission (15%)</small></div></div>') +
+   panel('sales','week','<div class="ring"><div>RM1,860</div></div><p class="center">Gross sales this week · 72% of goal</p><div class="statgrid"><div class="stat"><b>16</b><small>Bookings</small></div><div class="stat"><b>RM 279</b><small>Commission (15%)</small></div></div>') +
+   panel('sales','month','<div class="ring"><div>RM7,420</div></div><p class="center">Gross sales this month · 84% of goal</p><div class="statgrid"><div class="stat"><b>61</b><small>Bookings</small></div><div class="stat"><b>RM 1,113</b><small>Commission (15%)</small></div></div>') +
+   '<h2>Booking trend</h2><div class="bars">' + [40,63,52,78,70,92,84].map(function(h){return '<div style="flex:1"><i style="height:' + h + '%"></i></div>'}).join('') + '</div>' +
+   '<button class="btn ghost" data-nav="payouts">View payouts</button>'};
+
+S.payouts = {flow:'instructor', title:'Payouts', purpose:'Show Stripe Connect transfer state without exposing provider keys.',
+ elements:['Available balance','Connect account status','Payout history'], behaviour:'Payouts scheduled by webhook after confirmed payment; amounts resolved server-side.', source:'Derived from brief p.12',
+ render:()=> appbar('Payouts') + '<div class="hero-band" style="height:92px"><span class="band-label">AVAILABLE BALANCE · RM 2,480.00</span></div>' +
+   '<div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">S</div><div class="txt"><b>Stripe Connect</b><small>Payouts enabled · bank ending 8821</small></div><span class="status">ACTIVE</span></div>' +
+   '<h2>Recent payouts</h2><div class="icard"><div class="rowline"><b>RM 860.00</b><span class="status">PAID</span></div><small>24 Nov · transfer to bank 8821</small></div>' +
+   '<div class="icard"><div class="rowline"><b>RM 540.00</b><span class="status warn">PENDING</span></div><small>20 Nov · arrives in 2 business days</small></div>' +
+   '<button class="btn ghost" data-nav="instructor_home">Back to workspace</button>'};
+
+/* ---- Community & trust ---- */
+S.groups = {flow:'community', title:'Groups', purpose:'Discover and join martial arts communities around styles and locations.',
+ elements:['Suggested / Your groups / Near you tabs','Group cards with member counts','Join buttons and create group'], behaviour:'Group membership enforced by RLS; posts only visible to members.', source:'Brief p.8',
+ render:()=> appbar('Groups','Create') + '<h1 style="font-size:20px">Communities</h1>' +
+   tabs('grp',[{id:'suggested',label:'Suggested'},{id:'your',label:'Your groups'},{id:'near',label:'Near you'}]) +
+   panel('grp','suggested',
+     '<div class="icard"><div class="rowline"><b>BJJ Beginners Malaysia</b><button class="btn ghost small" data-nav="group_feed">Join</button></div><small>4,280 members · Active daily</small></div>' +
+     '<div class="icard"><div class="rowline"><b>Muay Thai Johor</b><button class="btn ghost small" data-nav="group_feed">Join</button></div><small>1,140 members · 3 km away</small></div>') +
+   panel('grp','your',
+     '<div class="icard"><div class="rowline"><b>Striking &amp; Conditioning</b><span class="status">JOINED</span></div><small>860 members · You are a member</small><div class="rowline"><small>12 new posts today</small><button class="btn small" data-nav="group_feed">Open feed</button></div></div>') +
+   panel('grp','near',
+     '<div class="icard"><div class="rowline"><b>Judo Club JB</b><button class="btn ghost small" data-nav="group_feed">Join</button></div><small>320 members · 2.1 km away</small></div>') +
+   '<button class="btn ghost" data-nav="post_composer">Create a group post</button>'};
+
+S.group_feed = {flow:'community', title:'Group feed', purpose:'Read and interact with member posts in a moderated community.',
+ elements:['Group header and rules','Post cards with like, comment, share','Composer shortcut','Member list'], behaviour:'Optimistic likes and comments with local drafts; WorkManager replays writes offline.', source:'Brief p.8',
+ render:()=> appbar('BJJ Beginners Malaysia','Members') + '<div class="summary"><div><b>Group rules</b></div><small>Be respectful. No spam. Share verified techniques only.</small></div>' +
+   '<div class="icard"><div class="rowline"><div class="avatar" style="width:28px;height:28px;font-size:9px">MK</div><b style="flex:1">Marcus Koh</b><small>2h ago</small></div><p style="margin-top:8px">Anyone else drilling guard retention at home? Sharing my 10-minute routine.</p><div class="rowline"><small>42 likes · 8 comments</small><span class="tag">Like</span></div></div>' +
+   '<div class="icard"><div class="rowline"><div class="avatar warm" style="width:28px;height:28px;font-size:9px">SR</div><b style="flex:1">Siti Rahma</b><small>5h ago</small></div><p style="margin-top:8px">Beginner tip: ask your instructor about grip fighting before sparring.</p><div class="rowline"><small>28 likes · 4 comments</small><span class="tag">Like</span></div></div>' +
+   '<button class="btn" data-nav="post_composer">Write a post</button>'};
+
+S.post_composer = {flow:'community', title:'Post composer', purpose:'Create a text or media post for a joined group.',
+ elements:['Group selector','Text and media attachment','Post action with draft state'], behaviour:'Drafts saved locally; post published immediately online, queued offline with an idempotency key.', source:'Brief p.8',
+ render:()=> appbar('New post','Draft saved') + '<h1 style="font-size:19px">Share with your group</h1>' +
+   '<div class="field"><label>Posting to</label><select><option>BJJ Beginners Malaysia</option><option>Striking &amp; Conditioning</option></select></div>' +
+   '<div class="field"><label>Your post</label><textarea style="min-height:120px" placeholder="Ask a question or share a technique..."></textarea></div>' +
+   '<div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">+</div><div class="txt"><b>Attach media</b><small>Image or short video</small></div></div>' +
+   '<button class="btn" data-nav="group_feed">Publish post</button>'};
+
+S.support = {flow:'community', title:'Support', purpose:'Submit a support ticket and find direct contact channels.',
+ elements:['Subject, issue, image, email and phone','Submit ticket','Email / phone / chat contacts'], behaviour:'Offline drafts queued in the outbox; ticket status reflected in notifications.', source:'Brief p.13',
+ render:()=> appbar('Help &amp; support') + '<h1 style="font-size:19px">How can we help?</h1>' +
+   '<div class="field"><label>Subject</label><select><option>Booking issue</option><option>Payment issue</option><option>Account issue</option><option>Other</option></select></div>' +
+   '<div class="field"><label>Describe your issue</label><textarea placeholder="Tell us what happened..."></textarea></div>' +
+   '<div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">+</div><div class="txt"><b>Attach image</b><small>Optional · 10 MB max</small></div></div>' +
+   field('Email','you@example.com','email') + field('Phone','012-345 6789','tel') +
+   '<button class="btn" data-nav="home">Submit ticket</button>' +
+   '<h2>Other ways to reach us</h2>' + listRow('E','Email support','support@moma.my','support') +
+   listRow('C','Live chat','Weekdays · 9:00–18:00','support')};
+
+S.report = {flow:'community', title:'Report content', purpose:'Flag users or content with a reason and supporting detail.',
+ elements:['Target reference','Reason list from the brief','Details field and submit'], behaviour:'Creates a report row visible to reporter and admins only; queued offline when needed.', source:'Brief p.12',
+ render:()=> appbar('Report','Confidential') + '<h1 style="font-size:19px">Report a user or post</h1><p>Your report is visible only to MoMA moderators.</p>' +
+   '<div class="field"><label>What are you reporting?</label><select><option>Post in BJJ Beginners Malaysia</option><option>User profile</option><option>Instructor listing</option></select></div>' +
+   '<h2>Reason</h2><div class="chiprow"><button class="mini-chip">Spam</button><button class="mini-chip">Hate speech</button><button class="mini-chip">False information</button><button class="mini-chip">Adult content</button><button class="mini-chip">Violence</button><button class="mini-chip">IP violation</button><button class="mini-chip">Other</button></div>' +
+   '<div class="field" style="margin-top:12px"><label>Details</label><textarea placeholder="Add context for the moderator..."></textarea></div>' +
+   '<button class="btn" data-nav="group_feed">Submit report</button>'};
+
+S.dispute = {flow:'community', title:'Booking dispute', purpose:'Raise a dispute for a booking with evidence and a reason.',
+ elements:['Booking reference','Reason and details','Evidence upload','Submit'], behaviour:'Creates a dispute ticket; review submission may be blocked until resolution.', source:'Brief p.10',
+ render:()=> appbar('Raise a dispute','Booking BK-8291') + '<h1 style="font-size:19px">Dispute a booking</h1>' +
+   '<div class="summary"><div><span>Booking</span><b>Judo technique · Arif Rahman</b></div><div><span>Date</span><b>2 Nov, 10:00</b></div><div><span>Amount</span><b>RM 150.00</b></div></div>' +
+   '<div class="field"><label>Reason</label><select><option>Instructor did not attend</option><option>Lesson did not match listing</option><option>Venue issue</option><option>Other</option></select></div>' +
+   '<div class="field"><label>Details</label><textarea placeholder="Explain what happened..."></textarea></div>' +
+   '<div class="listrow"><div class="avatar" style="width:30px;height:30px;font-size:10px">+</div><div class="txt"><b>Add evidence</b><small>Screenshot or photo · 10 MB max</small></div></div>' +
+   '<button class="btn" data-nav="bookings">Submit dispute</button>'};
+
+/* ---- Admin journey ---- */
+S.admin_console = {flow:'admin', title:'Admin console', purpose:'Operations overview for verification, disputes, reports and payouts.',
+ elements:['KPI cards','Queue counts','Quick moderation actions'], behaviour:'Admin-only role claim and RLS; phone/tablet responsive layout.', source:'Derived from Operations',
+ render:()=> appbar('MoMA operations','Admin') + '<h1 style="font-size:20px">Marketplace health</h1>' +
+   '<div class="statgrid"><div class="stat"><b>1,284</b><small>Active users</small></div><div class="stat"><b>186</b><small>Verified instructors</small></div><div class="stat"><b>7</b><small>Open disputes</small></div><div class="stat"><b>12</b><small>Pending reports</small></div></div>' +
+   '<h2>Work queues</h2>' + listRow('V','Instructor verification','7 applications awaiting review','verification_queue','<span class="tag amber">7</span>') +
+   listRow('D','Disputes','7 open cases','dispute_queue','<span class="tag red">7</span>') +
+   listRow('R','Content moderation','12 reported items','moderation','<span class="tag blue">12</span>') +
+   listRow('S','Sales report','Platform commission and payouts','sales_report')};
+
+S.verification_queue = {flow:'admin', title:'Credential verification', purpose:'Verify black belts, wrestling records and coaching licences before gym shortlisting and payouts.',
+ elements:['Applicant list for the four open roles','Dan grade / licence document review','Approve / reject actions'], behaviour:'Decision writes are admin-only; approval sets the verified flag used by the mandatory matching gate.', source:'Gym requirements / derived Operations',
+ render:()=> appbar('Verification','4 roles pending') + '<h1 style="font-size:19px">Coach credentials</h1>' +
+   '<div class="queue"><div class="rowline"><b>Kenji Watanabe</b><span class="status warn">PENDING</span></div><small>Judo 4th dan · dan certificate + coaching licence · 2h ago</small><div class="rowline"><button class="btn ghost small">Reject</button><button class="btn small" data-nav="admin_console">Verify</button></div></div>' +
+   '<div class="queue"><div class="rowline"><b>Rafiq Uddin</b><span class="status warn">PENDING</span></div><small>Wrestler · competition record · ADCC ruleset experience</small><div class="rowline"><button class="btn ghost small">Reject</button><button class="btn small" data-nav="admin_console">Verify</button></div></div>' +
+   '<div class="queue"><div class="rowline"><b>Sanjay Rao</b><span class="status info">UNDER REVIEW</span></div><small>Kyokushin black belt · rank certificate check in progress</small></div>' +
+   '<div class="queue"><div class="rowline"><b>Mei Ling Tan</b><span class="status info">UNDER REVIEW</span></div><small>Muay Thai coach · gym licence check in progress</small></div>'};
+
+S.dispute_queue = {flow:'admin', title:'Dispute queue', purpose:'Triage booking disputes and record resolutions.',
+ elements:['Case list with status','Booking reference and amount','Open and resolve actions'], behaviour:'Only admins can change dispute status; affected users see read-only case state.', source:'Brief p.10 / derived',
+ render:()=> appbar('Disputes','7 open') + '<h1 style="font-size:19px">Open cases</h1>' +
+   '<div class="queue"><div class="rowline"><b>BK-8291 · Judo technique</b><span class="tag red">OPEN</span></div><small>Aina Nadirah vs Arif Rahman · RM 150.00 · 1d ago</small><div class="rowline"><button class="btn small" data-nav="admin_console">Review case</button></div></div>' +
+   '<div class="queue"><div class="rowline"><b>BK-8170 · Muay Thai Basics</b><span class="tag amber">UNDER REVIEW</span></div><small>Wei Jie vs Mei Ling Tan · RM 95.00 · 3d ago</small></div>' +
+   '<div class="queue"><div class="rowline"><b>BK-8044 · BJJ Fundamentals</b><span class="status">RESOLVED</span></div><small>Refund issued · closed 6d ago</small></div>'};
+
+S.moderation = {flow:'admin', title:'Content moderation', purpose:'Act on reported posts, profiles and listings with an auditable decision.',
+ elements:['Reported item preview','Reason and report count','Keep / remove actions'], behaviour:'Moderation actions create audit events; content visibility updates through RLS-backed policies.', source:'Brief p.12 / derived',
+ render:()=> appbar('Moderation','12 reports') + '<h1 style="font-size:19px">Reported content</h1>' +
+   '<div class="queue"><div class="rowline"><b>Post · BJJ Beginners Malaysia</b><span class="tag red">4 reports</span></div><small>Reason: spam · reported 2h ago</small><p style="font-size:11px;margin:8px 0">"Cheap private lessons, message me directly..."</p><div class="rowline"><button class="btn ghost small">Keep</button><button class="btn small" data-nav="admin_console">Remove</button></div></div>' +
+   '<div class="queue"><div class="rowline"><b>Profile · Instructor listing</b><span class="tag amber">1 report</span></div><small>Reason: false information · reported 6h ago</small><div class="rowline"><button class="btn ghost small">Keep</button><button class="btn small" data-nav="verification_queue">Verify documents</button></div></div>'};
+
+/* ---------- Prototype engine ---------- */
+const flowMeta = {
+  gym:{label:'BJJ gym — first stakeholder', screens:['gym_home','gym_curriculum','coach_shortlist','coach_profile','gym_post_role','bookings','checkout','login']},
+  student:{label:'Student / gym member', screens:['onboard','login','register','forgot','home','search','instructor','matching','checkout','bookings','review','dashboard','profile']},
+  instructor:{label:'Coach / instructor', screens:['login','instructor_home','listing_edit','availability','sales_report','payouts','profile']},
+  community:{label:'Community &amp; trust', screens:['groups','group_feed','post_composer','support','report','dispute','bookings']},
+  admin:{label:'Admin / moderator', screens:['login','admin_console','verification_queue','dispute_queue','moderation','sales_report']}
+};
+const navSets = {
+  gym:[['Programs','gym_home','P'],['Curriculum','gym_curriculum','C'],['Candidates','coach_shortlist','S'],['Bookings','bookings','B'],['Profile','gym_home','G']],
+  student:[['Home','home','H'],['Search','search','S'],['Bookings','bookings','B'],['Groups','groups','G'],['Profile','profile','P']],
+  instructor:[['Today','instructor_home','H'],['Listings','listing_edit','L'],['Bookings','bookings','B'],['Reports','sales_report','R'],['Profile','profile','P']],
+  community:[['Home','home','H'],['Search','search','S'],['Bookings','bookings','B'],['Groups','groups','G'],['Profile','profile','P']],
+  admin:[['Overview','admin_console','H'],['Verify','verification_queue','V'],['Disputes','dispute_queue','D'],['Reports','moderation','R'],['Profile','profile','P']]
+};
+let flow = 'gym', current = 'gym_home', previous = 'gym_home';
+
+function render(){
+  const list = flowMeta[flow].screens;
+  if(list.indexOf(current) === -1) current = list[0];
+  document.getElementById('flowButtons').innerHTML = Object.keys(flowMeta).map(function(k){
+    return '<button class="' + (k === flow ? 'active' : '') + '" data-flow="' + k + '">' + flowMeta[k].label + '</button>';
+  }).join('');
+  document.getElementById('screenRail').innerHTML = list.map(function(id,i){
+    return '<button class="screen-link ' + (id === current ? 'active' : '') + '" data-screen="' + id + '"><i>' + String(i+1).padStart(2,'0') + '</i>' + S[id].title + '</button>';
+  }).join('');
+  document.getElementById('screenCounter').textContent = 'Screen ' + (list.indexOf(current)+1) + ' / ' + list.length;
+
+  const sc = S[current];
+  document.getElementById('phone').className = 'phone' + (sc.auth ? ' auth' : '');
+  document.getElementById('screen').innerHTML = sc.render();
+  document.getElementById('screen').scrollTop = 0;
+  const nav = navSets[flow];
+  document.getElementById('bottomnav').innerHTML = nav.map(function(n){
+    return '<button class="navbtn ' + (n[1] === current ? 'active' : '') + '" data-nav="' + n[1] + '"><span class="ico">' + n[2] + '</span>' + n[0] + '</button>';
+  }).join('');
+
+  document.getElementById('spec').innerHTML =
+    '<div class="spec-title">' + sc.title + '</div><div class="spec-role">' + flowMeta[flow].label + ' journey</div>' +
+    '<dt>Purpose</dt><dd>' + sc.purpose + '</dd>' +
+    '<dt>Key elements</dt><ul>' + sc.elements.map(function(e){return '<li>' + e + '</li>'}).join('') + '</ul>' +
+    '<dt>Behaviour</dt><dd>' + sc.behaviour + '</dd>' +
+    '<dt>Source</dt><dd>' + sc.source + '</dd>';
+
+  const input = document.getElementById('searchInput');
+  if(input){
+    input.addEventListener('input', function(){
+      document.getElementById('suggestions').style.display = this.value.length > 1 ? 'block' : 'none';
+      const q = this.value.toLowerCase();
+      document.querySelectorAll('#resultList .icard').forEach(function(card){
+        card.style.display = card.textContent.toLowerCase().indexOf(q) > -1 || q.length < 2 ? '' : 'none';
+      });
+    });
+  }
+}
+function open(id){
+  if(id === 'back') id = previous;
+  if(!S[id]) return;
+  previous = current; current = id; render();
+}
+document.getElementById('flowButtons').addEventListener('click', function(e){
+  const b = e.target.closest('[data-flow]'); if(!b) return;
+  flow = b.dataset.flow; current = flowMeta[flow].screens[0]; previous = current; render();
+});
+document.getElementById('screenRail').addEventListener('click', function(e){
+  const b = e.target.closest('[data-screen]'); if(b) open(b.dataset.screen);
+});
+document.getElementById('phone').addEventListener('click', function(e){
+  const nav = e.target.closest('[data-nav]'); if(nav){open(nav.dataset.nav);return;}
+  const tab = e.target.closest('[data-tab]');
+  if(tab){
+    const group = tab.dataset.tab;
+    tab.parentElement.querySelectorAll('[data-tab]').forEach(function(t){t.classList.toggle('active', t === tab)});
+    document.querySelectorAll('[data-panel-group="' + group + '"]').forEach(function(p){
+      p.style.display = p.dataset.panel === tab.dataset.panel ? 'block' : 'none';
+    });
+    return;
+  }
+  const star = e.target.closest('[data-star]');
+  if(star){
+    const n = Number(star.dataset.star);
+    document.querySelectorAll('#starrow button').forEach(function(b){
+      b.querySelector('svg path').setAttribute('fill', Number(b.dataset.star) <= n ? '#e0a72a' : '#ffffff');
+      b.querySelector('svg path').setAttribute('stroke', Number(b.dataset.star) <= n ? '#c98f14' : '#b9c8bf');
+    });
+    document.getElementById('starLabel').textContent = n + ' of 5 stars';
+    return;
+  }
+  const chip = e.target.closest('.mini-chip');
+  if(chip && chip.tagName === 'BUTTON' && !chip.classList.contains('active')) chip.classList.toggle('active');
+  const toggle = e.target.closest('.toggle');
+  if(toggle) toggle.classList.toggle('on');
+});
+document.getElementById('prevBtn').addEventListener('click', function(){
+  const l = flowMeta[flow].screens, i = l.indexOf(current); open(l[(i - 1 + l.length) % l.length]);
+});
+document.getElementById('nextBtn').addEventListener('click', function(){
+  const l = flowMeta[flow].screens, i = l.indexOf(current); open(l[(i + 1) % l.length]);
+});
+render();
+</script>
+</body>
+</html>

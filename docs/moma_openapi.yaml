@@ -1,0 +1,589 @@
+openapi: 3.1.0
+info:
+  title: MoMA API
+  version: 1.0.0
+  summary: Android marketplace for martial arts coaching — REST, PostgREST and Edge Functions
+  description: >-
+    Design-baseline API for MoMA. Supabase Auth handles identity, PostgREST exposes
+    relational tables under RLS, and Edge Functions own trusted business logic
+    (search, matching, booking, payment, analytics). All money state is
+    server-authoritative. See 06_API_Documentation.md for full examples.
+servers:
+  - url: https://{project}.supabase.co
+    description: Supabase project
+    variables:
+      project:
+        default: your-project
+security:
+  - bearerAuth: []
+  - apiKey: []
+tags:
+  - name: Auth
+  - name: Discovery
+  - name: Gym
+  - name: Booking
+  - name: Trust
+  - name: Analytics
+  - name: Storage
+paths:
+  /auth/v1/signup:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                data:
+                  type: object
+                  properties:
+                    full_name: { type: string }
+                    phone: { type: string }
+      responses:
+        '200':
+          description: User created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /auth/v1/token:
+    post:
+      tags: [Auth]
+      summary: Login or refresh a session
+      security: []
+      parameters:
+        - in: query
+          name: grant_type
+          required: true
+          schema: { type: string, enum: [password, refresh_token] }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                refresh_token: { type: string }
+      responses:
+        '200':
+          description: Session tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/v1/recover:
+    post:
+      tags: [Auth]
+      summary: Send password recovery email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Neutral confirmation (always) }
+  /functions/v1/search:
+    post:
+      tags: [Discovery]
+      summary: Search coaches with credential and ruleset filters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SearchRequest' }
+      responses:
+        '200':
+          description: Matching coaches
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /functions/v1/match-instructors:
+    post:
+      tags: [Discovery]
+      summary: Credential-gated ranked matches with score breakdown
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MatchRequest' }
+      responses:
+        '200':
+          description: Ranked matches
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MatchResponse' }
+        '422': { $ref: '#/components/responses/BusinessError' }
+  /rest/v1/lesson_listings:
+    get:
+      tags: [Discovery]
+      summary: List lesson listings (PostgREST filters)
+      parameters:
+        - { in: query, name: style_id, schema: { type: string }, description: 'eq.<uuid>' }
+        - { in: query, name: city, schema: { type: string }, description: 'eq.<city>' }
+        - { in: query, name: select, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Listings visible to caller
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Listing' }
+    post:
+      tags: [Discovery]
+      summary: Create a lesson listing (instructor only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Listing' }
+      responses:
+        '201': { description: Created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /rest/v1/coach_requirements:
+    get:
+      tags: [Gym]
+      summary: List open coach requirements for a gym program
+      parameters:
+        - in: query
+          name: program_id
+          schema: { type: string }
+          description: 'eq.<uuid>'
+      responses:
+        '200': { description: Requirements visible under RLS }
+    post:
+      tags: [Gym]
+      summary: Post a coach requirement with mandatory credential and ruleset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [program_id, required_style, minimum_credential, ruleset_experience, budget_cents]
+              properties:
+                program_id: { type: string, format: uuid }
+                required_style: { type: string }
+                minimum_credential: { type: string }
+                ruleset_experience: { type: string, enum: [GI_NO_GI, ADCC, ACBJJ_BATTLE_JIU_JITSU] }
+                budget_cents: { type: integer, minimum: 0 }
+      responses:
+        '201': { description: Created }
+  /functions/v1/create-booking:
+    post:
+      tags: [Booking]
+      summary: Hold a slot atomically and create a Stripe PaymentIntent
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBookingRequest' }
+      responses:
+        '201':
+          description: Pending booking with client secret
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreateBookingResponse' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessError' }
+  /functions/v1/confirm-booking:
+    post:
+      tags: [Booking]
+      summary: Confirm booking after verified Stripe webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookingId, paymentIntentId]
+              properties:
+                bookingId: { type: string, format: uuid }
+                paymentIntentId: { type: string }
+      responses:
+        '200':
+          description: Confirmed booking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '422': { $ref: '#/components/responses/BusinessError' }
+  /functions/v1/cancel-booking:
+    post:
+      tags: [Booking]
+      summary: Cancel booking and apply server refund policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookingId]
+              properties:
+                bookingId: { type: string, format: uuid }
+                reason: { type: string }
+      responses:
+        '200': { description: Cancelled booking with refund status }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /rest/v1/bookings:
+    get:
+      tags: [Booking]
+      summary: List bookings (student or instructor scoped by RLS)
+      parameters:
+        - { in: query, name: student_id, schema: { type: string }, description: 'eq.<uuid>' }
+        - { in: query, name: instructor_id, schema: { type: string }, description: 'eq.<uuid>' }
+      responses:
+        '200':
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Booking' }
+  /rest/v1/reviews:
+    post:
+      tags: [Trust]
+      summary: Submit a review for a completed booking
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Review' }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/BusinessError' }
+  /rest/v1/disputes:
+    post:
+      tags: [Trust]
+      summary: Raise a booking dispute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Dispute' }
+      responses:
+        '201': { description: Created }
+  /rest/v1/support_tickets:
+    post:
+      tags: [Trust]
+      summary: Submit a support ticket (offline drafts supported)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, issue]
+              properties:
+                subject: { type: string }
+                issue: { type: string }
+                image_url: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+      responses:
+        '201': { description: Created }
+  /functions/v1/analytics/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Training dashboard aggregates
+      parameters:
+        - in: query
+          name: range
+          schema: { type: string, enum: [today, week, month], default: week }
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dashboard' }
+  /functions/v1/reports/sales:
+    get:
+      tags: [Analytics]
+      summary: Instructor/admin sales aggregates
+      parameters:
+        - { in: query, name: from, schema: { type: string, format: date } }
+        - { in: query, name: to, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Sales report }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /storage/v1/object/{bucket}/{path}:
+    post:
+      tags: [Storage]
+      summary: Upload media or credential document
+      parameters:
+        - { in: path, name: bucket, required: true, schema: { type: string, enum: [avatars, listing-media, review-media, credential-documents, dispute-evidence, support-attachments] } }
+        - { in: path, name: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Uploaded object key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Key: { type: string }
+        '400': { $ref: '#/components/responses/ValidationError' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Supabase anon/public key (safe in client; RLS is the security boundary)
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: false
+      schema: { type: string }
+      description: Required when replaying offline writes
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unauthorized:
+      description: Missing or expired credentials
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Role or RLS denies operation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: Slot or version conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    BusinessError:
+      description: Business rule failure
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, traceId]
+          properties:
+            code: { type: string, example: SLOT_NO_LONGER_AVAILABLE }
+            message: { type: string }
+            traceId: { type: string }
+    AuthSession:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        expires_in: { type: integer }
+        token_type: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            email: { type: string, format: email }
+    SearchRequest:
+      type: object
+      properties:
+        q: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        style: { type: string }
+        credentialVerified: { type: boolean }
+        ruleset: { type: string, enum: [GI_NO_GI, ADCC, ACBJJ_BATTLE_JIU_JITSU] }
+        day: { type: string }
+        maxPriceCents: { type: integer }
+        limit: { type: integer, maximum: 50 }
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              instructorId: { type: string, format: uuid }
+              name: { type: string }
+              styles: { type: array, items: { type: string } }
+              credentialsVerified: { type: boolean }
+              ratingAvg: { type: number }
+              reviewCount: { type: integer }
+              hourlyRateCents: { type: integer }
+              rulesets: { type: array, items: { type: string } }
+              availableDays: { type: array, items: { type: string } }
+        traceId: { type: string }
+    MatchRequest:
+      type: object
+      properties:
+        style: { type: string }
+        level: { type: string }
+        city: { type: string }
+        budgetCentsMax: { type: integer }
+        preferredDays: { type: array, items: { type: string } }
+        goal: { type: string }
+        requirementId: { type: string, format: uuid }
+        requiredCredential: { type: string }
+        requiredRuleset: { type: string }
+    MatchResponse:
+      type: object
+      properties:
+        gate:
+          type: object
+          properties:
+            applied: { type: boolean }
+            excludedCount: { type: integer }
+        matches:
+          type: array
+          items:
+            type: object
+            properties:
+              instructorId: { type: string, format: uuid }
+              name: { type: string }
+              score: { type: number, minimum: 0, maximum: 1 }
+              factors:
+                type: object
+                properties:
+                  style: { type: number }
+                  availability: { type: number }
+                  distance: { type: number }
+                  rating: { type: number }
+                  price: { type: number }
+                  verification: { type: number }
+              credentialsVerified: { type: boolean }
+        traceId: { type: string }
+    Listing:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        instructor_id: { type: string, format: uuid }
+        style_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        ruleset: { type: string }
+        level: { type: string }
+        duration_min: { type: integer }
+        price_cents: { type: integer }
+        city: { type: string }
+        active: { type: boolean }
+    CreateBookingRequest:
+      type: object
+      required: [listingId, slotId]
+      properties:
+        listingId: { type: string, format: uuid }
+        slotId: { type: string, format: uuid }
+        requirementId: { type: string, format: uuid }
+        ruleset: { type: string }
+        paymentMethodId: { type: string }
+    CreateBookingResponse:
+      type: object
+      properties:
+        bookingId: { type: string, format: uuid }
+        status: { type: string, example: PENDING_PAYMENT }
+        amountCents: { type: integer }
+        commissionCents: { type: integer }
+        currency: { type: string, example: MYR }
+        ruleset: { type: string }
+        holdExpiresAt: { type: string, format: date-time }
+        paymentIntent:
+          type: object
+          properties:
+            id: { type: string }
+            clientSecret: { type: string }
+        traceId: { type: string }
+    Booking:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        student_id: { type: string, format: uuid }
+        instructor_id: { type: string, format: uuid }
+        listing_id: { type: string, format: uuid }
+        slot_id: { type: string, format: uuid }
+        status: { type: string, enum: [PENDING_PAYMENT, CONFIRMED, COMPLETED, CANCELLED, DISPUTED] }
+        amount_cents: { type: integer }
+        commission_cents: { type: integer }
+        ruleset: { type: string }
+        starts_at: { type: string, format: date-time }
+    Review:
+      type: object
+      required: [bookingId, rating]
+      properties:
+        bookingId: { type: string, format: uuid }
+        instructorId: { type: string, format: uuid }
+        studentId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        title: { type: string }
+        body: { type: string }
+        tags: { type: array, items: { type: string } }
+    Dispute:
+      type: object
+      required: [bookingId, reason]
+      properties:
+        bookingId: { type: string, format: uuid }
+        raisedBy: { type: string, format: uuid }
+        reason: { type: string }
+        details: { type: string }
+        evidence_urls_csv: { type: string }
+    Dashboard:
+      type: object
+      properties:
+        range: { type: string }
+        summary:
+          type: object
+          properties:
+            sessions: { type: integer }
+            durationMinutes: { type: integer }
+            intensity: { type: string }
+            caloriesEstimate: { type: integer }
+            changePct: { type: number }
+        series:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              value: { type: number }
+        widgets:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              position: { type: integer }
+              enabled: { type: boolean }
+        traceId: { type: string }

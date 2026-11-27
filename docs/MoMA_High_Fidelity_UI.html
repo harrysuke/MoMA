@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MoMA — High-Fidelity Interface System</title>
+<style>
+:root{
+  --primary:#147A58;--primary-dark:#0D5C42;--primary-deep:#073B2B;--primary-bright:#1E9A70;
+  --accent:#E8F6EE;--accent-2:#D5EEDF;--bg:#F4F8F6;--canvas:#EEF4F0;--surface:#FFFFFF;
+  --ink:#13251E;--muted:#61756C;--faint:#93A69B;--line:#E1EBE5;
+  --amber:#B56A0B;--amber-bg:#FDF1DD;--amber-line:#F1D9AC;
+  --red:#B34242;--red-bg:#FBE9E9;--blue:#2A6BB5;--blue-bg:#E7F0FB;
+  --shadow:0 14px 34px rgba(13,70,48,.10);--shadow-sm:0 4px 14px rgba(13,70,48,.07);
+  --r-lg:20px;--r-md:14px;--r-sm:10px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:"Segoe UI",Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI Variable",sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid rgba(20,122,88,.35);outline-offset:2px}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.icon{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-4px}
+.icon.sm{width:14px;height:14px;stroke-width:2.1;vertical-align:-2px}
+.icon.lg{width:24px;height:24px}
+
+/* ---------- Page shell ---------- */
+.site-hero{background:radial-gradient(circle at 82% -20%,rgba(96,203,153,.32),transparent 42%),linear-gradient(135deg,#06392A 0%,#0D5C42 52%,#147A58 100%);color:#fff;padding:38px 0 42px;position:relative;overflow:hidden}
+.site-hero:before{content:"";position:absolute;width:520px;height:520px;border:1px solid rgba(255,255,255,.08);border-radius:50%;right:-140px;top:-240px;box-shadow:0 0 0 60px rgba(255,255,255,.025),0 0 0 130px rgba(255,255,255,.02)}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px;position:relative}
+.brandline{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.16em;font-size:13px}
+.brandmark{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32);display:grid;place-items:center;font-size:13px;letter-spacing:0}
+.hero-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:36px;align-items:end;margin-top:26px}
+.kicker{font-size:10px;letter-spacing:.22em;text-transform:uppercase;font-weight:800;color:#9FE5C2}
+.hero-grid h1{font-size:40px;line-height:1.1;letter-spacing:-.035em;margin:9px 0 12px;font-weight:800}
+.hero-grid h1 em{font-style:normal;color:#9BE2BC}
+.hero-grid p{margin:0;color:rgba(255,255,255,.82);font-size:14px;max-width:620px}
+.hero-facts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.hero-facts span{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:7px 13px;font-size:11px;font-weight:700;backdrop-filter:blur(6px)}
+.replacement-note{margin-top:22px;display:inline-flex;gap:8px;align-items:center;font-size:11px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.12);border:1px solid rgba(255,255,255,.16);padding:7px 12px;border-radius:999px}
+
+.system-strip{background:var(--surface);border-bottom:1px solid var(--line)}
+.system-strip .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding-top:18px;padding-bottom:18px}
+.sys-item{padding:0 20px;border-right:1px solid var(--line)}
+.sys-item:first-child{padding-left:0}
+.sys-item:last-child{border-right:0}
+.sys-item small{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:6px}
+.sys-item b{font-size:12px;color:var(--ink)}
+.swatches{display:flex;gap:5px;margin-top:2px}
+.swatches i{width:18px;height:18px;border-radius:6px;display:block;border:1px solid rgba(0,0,0,.05)}
+
+main{padding:28px 0 70px}
+.work-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.work-head h2{font-size:23px;letter-spacing:-.025em;margin:0}
+.work-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.flowbar{display:flex;gap:6px;flex-wrap:wrap}
+.flowbar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:8px 14px;font-size:11px;font-weight:750;transition:.18s}
+.flowbar button:hover{border-color:#b9dfcb;color:var(--primary-dark)}
+.flowbar button.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 5px 14px rgba(20,122,88,.22)}
+.grid{display:grid;grid-template-columns:236px 400px minmax(260px,1fr);gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-sm)}
+.panel h3{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;font-weight:800}
+.rail{display:flex;flex-direction:column;gap:3px;max-height:622px;overflow:auto;padding-right:3px}
+.rail::-webkit-scrollbar{width:5px}.rail::-webkit-scrollbar-thumb{background:#d9e7de;border-radius:5px}
+.rail button{display:flex;gap:9px;align-items:center;text-align:left;border:0;background:transparent;border-radius:11px;padding:9px 10px;font-size:12px;color:#4C6358;transition:.16s}
+.rail button:hover{background:var(--bg)}
+.rail button.active{background:var(--accent);color:var(--primary-dark);font-weight:750}
+.rail .num{font-size:9px;font-weight:800;color:var(--faint);font-variant-numeric:tabular-nums;width:17px;flex:none}
+.rail button.active .num{color:var(--primary)}
+.rail-meta{font-size:10px;color:var(--faint);margin:12px 2px 0;border-top:1px solid var(--line);padding-top:11px}
+
+/* ---------- Device ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px}
+.device{width:390px;height:806px;background:linear-gradient(150deg,#24382f,#08160f 55%);border-radius:50px;padding:11px;box-shadow:0 30px 70px rgba(8,44,28,.28),inset 0 0 0 1px rgba(255,255,255,.12);position:relative}
+.device:after{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);width:96px;height:23px;border-radius:0 0 15px 15px;background:#08160f;z-index:9}
+.viewport{height:100%;border-radius:40px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.statusbar{height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:space-between;padding:8px 25px 0;background:transparent;color:var(--ink);font-size:11px;font-weight:800;z-index:4}
+.statusbar.on-dark{color:#fff}
+.status-right{display:flex;align-items:center;gap:6px}
+.status-right .icon{width:14px;height:14px;stroke-width:2}
+.app-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 104px;scrollbar-width:thin}
+.app-scroll::-webkit-scrollbar{width:4px}.app-scroll::-webkit-scrollbar-thumb{background:#d7e5dc;border-radius:5px}
+.auth-mode .app-scroll{padding-bottom:34px}
+.device.splash-mode .viewport{background:#073B2B}
+.device.splash-mode .statusbar{color:#fff}
+
+/* app bars */
+.appbar{display:flex;align-items:center;gap:10px;min-height:52px;padding:4px 0 8px;position:sticky;top:0;z-index:3;background:linear-gradient(var(--bg) 82%,rgba(244,248,246,0))}
+.appbar .icon-btn{width:38px;height:38px;border-radius:12px}
+.appbar .txt{flex:1;min-width:0}
+.appbar h4{font-size:16px;line-height:1.2;margin:0;letter-spacing:-.015em}
+.appbar small{font-size:10px;color:var(--muted);display:block;margin-top:1px}
+.icon-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--ink);display:grid;place-items:center;flex:none;transition:.16s}
+.icon-btn:hover{border-color:#b9dfcb;color:var(--primary);background:var(--accent)}
+.icon-btn.plain{border-color:transparent;background:transparent}
+.text-btn{border:0;background:transparent;color:var(--primary);font-size:11px;font-weight:800;padding:6px 2px}
+.headline{font-size:24px;letter-spacing:-.03em;line-height:1.16;margin:8px 0 5px;font-weight:800}
+.subline{font-size:12px;color:var(--muted);margin:0 0 16px}
+
+/* nav */
+.bottom-nav{position:absolute;left:10px;right:10px;bottom:10px;height:74px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border:1px solid #E6EFE9;border-radius:24px;box-shadow:0 -6px 26px rgba(13,70,48,.10);display:flex;align-items:center;justify-content:space-around;padding:6px 4px 8px;z-index:6}
+.auth-mode .bottom-nav{display:none}
+.navbtn{border:0;background:transparent;color:#82958B;min-width:59px;height:56px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;font-weight:750;transition:.18s}
+.navbtn .icon{width:20px;height:20px}
+.navbtn.active{color:var(--primary-dark);background:var(--accent)}
+.navbtn.active .icon{stroke-width:2.2}
+
+/* common blocks */
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 10px}
+.sec-head h3{font-size:14px;margin:0;letter-spacing:-.01em;font-weight:800}
+.sec-head button{font-size:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:13px;box-shadow:var(--shadow-sm);margin-bottom:10px}
+.card.tap{cursor:pointer;transition:.18s}
+.card.tap:hover{border-color:#bfdfcd;transform:translateY(-1px);box-shadow:0 10px 24px rgba(13,70,48,.11)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.row+.row{margin-top:9px}
+.row b{font-size:12.5px}
+.row small,.muted{color:var(--muted);font-size:11px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;letter-spacing:.02em;border-radius:7px;padding:3px 7px;background:var(--accent);color:var(--primary-dark);white-space:nowrap}
+.tag.ok{background:var(--accent);color:var(--primary-dark)}
+.tag.warn{background:var(--amber-bg);color:var(--amber)}
+.tag.info{background:var(--blue-bg);color:var(--blue)}
+.tag.bad{background:var(--red-bg);color:var(--red)}
+.tag.neutral{background:#EEF2EF;color:var(--muted)}
+.rating{display:inline-flex;align-items:center;gap:3px;color:#A66F0D;font-size:10px;font-weight:800}
+.rating .icon{fill:#E2A32B;stroke:#E2A32B}
+.avatar{width:44px;height:44px;border-radius:50%;display:inline-grid;place-items:center;overflow:hidden;flex:none;background:var(--accent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.avatar svg{width:100%;height:100%;display:block}
+.avatar.sq{border-radius:13px}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:3px 0 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:#fff;color:#52685D;border-radius:999px;padding:8px 12px;font-size:10.5px;font-weight:750;transition:.16s}
+.chip:hover{border-color:#b9dfcb}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(20,122,88,.18)}
+.chip.ghost.active{background:var(--accent);color:var(--primary-dark);border-color:#b9dfcb;box-shadow:none}
+.btn{border:0;border-radius:14px;background:var(--primary);color:#fff;width:100%;min-height:50px;padding:11px 16px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 18px rgba(20,122,88,.2);transition:.16s}
+.btn:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn:disabled{opacity:.7;cursor:default;transform:none}
+.btn.ghost{background:#fff;color:var(--primary-dark);border:1px solid #bcdcc9;box-shadow:none}
+.btn.ghost:hover{background:var(--accent)}
+.btn.dark{background:var(--primary-deep);box-shadow:0 8px 18px rgba(7,59,43,.22)}
+.btn.small{width:auto;min-height:34px;padding:7px 13px;font-size:10.5px;border-radius:10px;box-shadow:none}
+.sticky-cta{position:absolute;left:0;right:0;bottom:0;padding:14px 18px 92px;background:linear-gradient(rgba(244,248,246,0),var(--bg) 26%);z-index:5}
+.field{display:block;position:relative;margin-bottom:11px}
+.field>span{display:block;font-size:10px;font-weight:800;color:#3C564A;margin:0 0 5px 2px;letter-spacing:.02em}
+.field input,.field select,.field textarea{width:100%;border:1px solid #DCE8E1;background:#fff;border-radius:12px;padding:11px 12px;font-size:12px;color:var(--ink);outline:none;transition:.16s;min-height:44px}
+.field textarea{min-height:88px;resize:none;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(20,122,88,.1)}
+.field input::placeholder,.field textarea::placeholder{color:#9CB0A5}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2361756C' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.callout{border-radius:13px;background:var(--accent);border:1px solid #CBE7D6;padding:11px 12px;display:flex;gap:9px;font-size:11px;color:#255843;line-height:1.5;margin:12px 0}
+.callout.warn{background:var(--amber-bg);border-color:var(--amber-line);color:#7A4A08}
+.callout .icon{color:var(--primary);margin-top:1px}
+.callout.warn .icon{color:var(--amber)}
+.notice{display:flex;align-items:center;gap:8px;background:#fff;border:1px dashed #C8DCD0;border-radius:11px;padding:8px 11px;font-size:10px;color:var(--muted);margin-bottom:12px}
+.divider{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:10px;margin:14px 0}
+.divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow-sm)}
+.stat b{display:block;font-size:19px;letter-spacing:-.03em;color:var(--primary-dark);line-height:1.2;font-variant-numeric:tabular-nums}
+.stat small{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.listrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:.16s}
+.listrow:hover{border-color:#bfdfcd;background:#FBFEFC}
+.listrow .li-ico{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--primary-dark);display:grid;place-items:center;flex:none}
+.listrow .txt{flex:1;min-width:0}
+.listrow .txt b{font-size:11.5px;display:block}
+.listrow .txt small{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.chev{color:#A5B8AC;flex:none}
+.toggle{width:40px;height:23px;border-radius:999px;background:#D4E0D9;position:relative;flex:none;transition:.2s}
+.toggle:after{content:"";position:absolute;width:17px;height:17px;top:3px;left:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s}
+.toggle.on{background:var(--primary)}.toggle.on:after{left:20px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:86px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 10px 8px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}
+.bar-col i{width:100%;max-width:19px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#4FC194,#14805B);display:block}
+.bar-col span{font-size:9px;color:var(--faint)}
+.ring{--v:90%;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--primary) var(--v),#E7EFE9 0);position:relative}
+.ring:before{content:"";position:absolute;inset:5px;border-radius:50%;background:#fff}
+.ring b{position:relative;font-size:10px;color:var(--primary-dark)}
+.progress{display:flex;align-items:center;gap:5px;margin:4px 0 15px}
+.progress span{font-size:9px;font-weight:800;color:var(--faint);white-space:nowrap}
+.progress span.on{color:var(--primary)}
+.progress i{height:3px;border-radius:3px;background:var(--line);flex:1}
+.progress i.on{background:var(--primary)}
+.summary{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.summary .srow{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:5px 0}
+.summary .srow span{color:var(--muted)}
+.summary .srow b{text-align:right;font-weight:750}
+.summary .total{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px;font-size:13px;font-weight:800;color:var(--primary-dark)}
+.hero-card{border-radius:20px;padding:17px;color:#fff;background:radial-gradient(circle at 88% 12%,rgba(150,228,186,.35),transparent 42%),linear-gradient(135deg,#0B6046,#16845F);position:relative;overflow:hidden;box-shadow:0 14px 28px rgba(10,90,63,.2)}
+.hero-card:after{content:"";position:absolute;width:150px;height:150px;border:1px solid rgba(255,255,255,.14);border-radius:50%;right:-66px;top:-52px;box-shadow:0 0 0 26px rgba(255,255,255,.035)}
+.hero-card h2{font-size:19px;letter-spacing:-.02em;margin:0 0 4px;position:relative}
+.hero-card p{font-size:11px;color:rgba(255,255,255,.82);margin:0 0 14px;position:relative}
+.hero-search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:10px 12px;color:var(--faint);font-size:11px;position:relative;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.hero-search input{border:0;outline:0;background:transparent;font-size:11px;width:100%;color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:15px;padding:10px 5px 9px;text-align:center;cursor:pointer;transition:.18s}
+.tile:hover{transform:translateY(-2px);border-color:#bfdfcd;box-shadow:var(--shadow-sm)}
+.tile-art{height:42px;width:42px;border-radius:13px;margin:0 auto 7px;display:grid;place-items:center;color:#fff}
+.tile span{font-size:9.5px;font-weight:800;color:#3A5146}
+.coach-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.18s;box-shadow:var(--shadow-sm)}
+.coach-card:hover{border-color:#bfdfcd;transform:translateY(-1px)}
+.cc-top{display:flex;gap:10px;align-items:flex-start}
+.cc-id{flex:1;min-width:0}
+.cc-id b{font-size:12.5px;display:block;line-height:1.25}
+.cc-id small{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.cc-badges{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
+.cc-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:11px;padding-top:9px;font-size:10px;color:var(--muted)}
+.cc-foot b{font-size:12px;color:var(--primary-dark)}
+.band{height:112px;border-radius:17px;position:relative;overflow:hidden;margin-bottom:-24px;background:linear-gradient(135deg,#0C6247,#2FA579)}
+.band svg{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.band-label{position:absolute;left:14px;bottom:13px;color:#fff;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.slot{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 4px;font-size:10px;font-weight:800;color:#42584E;transition:.16s}
+.slot.free{border-color:#BEE1CE;background:#F4FBF7;color:var(--primary-dark)}
+.slot.selected{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 5px 12px rgba(20,122,88,.2)}
+.slot.held{background:var(--amber-bg);border-color:var(--amber-line);color:var(--amber)}
+.slot.booked{background:#F1F4F2;color:#A6B5AC;border-color:#E7EDE9;cursor:not-allowed}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:9px;font-size:9px;color:var(--muted)}
+.legend i{width:8px;height:8px;border-radius:3px;display:inline-block;margin-right:4px}
+.stars{display:flex;justify-content:center;gap:8px;margin:14px 0 6px}
+.stars button{border:0;background:transparent;font-size:34px;line-height:1;color:#D6E1DA;padding:0;width:42px;height:42px;transition:.15s}
+.stars button.on{color:#E3A62A;transform:scale(1.06)}
+.dayline{display:flex;gap:8px;align-items:flex-start;border-left:3px solid var(--line);padding:0 0 14px 13px;position:relative;margin-left:7px}
+.dayline:before{content:"";position:absolute;left:-6px;top:3px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--primary)}
+.dayline:last-child{border-left-color:transparent}
+.dayline .day{font-size:10px;font-weight:850;color:var(--primary-dark);width:30px;flex:none;padding-top:2px}
+.auth-wrap{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:14px 2px 20px}
+.auth-logo{width:60px;height:60px;border-radius:19px;background:linear-gradient(135deg,#0D5C42,#2EA477);color:#fff;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;font-size:16px;margin:0 auto 16px;box-shadow:0 12px 26px rgba(13,92,66,.25)}
+.auth-wrap h1{font-size:23px;letter-spacing:-.03em;text-align:center;margin:0 0 6px}
+.auth-wrap>p{text-align:center;font-size:11.5px;color:var(--muted);margin:0 0 20px}
+.social-row{display:flex;gap:9px}
+.social-row button{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;min-height:44px;font-size:11px;font-weight:800;color:#2E463B}
+.pill-nav{display:flex;gap:4px;background:#EEF4F0;border-radius:12px;padding:4px;margin:4px 0 14px}
+.pill-nav button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 4px;font-size:10.5px;font-weight:800;color:var(--muted)}
+.pill-nav button.active{background:#fff;color:var(--primary-dark);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.sheet{position:absolute;inset:0;z-index:8;display:none}
+.sheet.open{display:block}
+.sheet-back{position:absolute;inset:0;background:rgba(7,40,27,.38);backdrop-filter:blur(2px)}
+.sheet-card{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:26px 26px 0 0;padding:12px 18px 92px;box-shadow:0 -12px 40px rgba(0,0,0,.14)}
+.sheet-grab{width:38px;height:4px;border-radius:4px;background:#D9E5DD;margin:0 auto 14px}
+.sheet-card h4{margin:0 0 12px;font-size:16px}
+.toast{position:absolute;left:22px;right:22px;bottom:96px;background:#0C4834;color:#fff;border-radius:13px;padding:11px 14px;font-size:11px;font-weight:700;box-shadow:0 12px 28px rgba(0,0,0,.24);transform:translateY(14px);opacity:0;pointer-events:none;transition:.25s;z-index:12;display:flex;gap:8px;align-items:center}
+.toast.show{transform:none;opacity:1}
+.spinner{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.controls{display:flex;gap:9px;align-items:center}
+.controls button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 15px;font-size:11px;font-weight:750;color:var(--primary-dark)}
+.controls button:hover{border-color:#b9dfcb;background:var(--accent)}
+.hint{font-size:10.5px;color:var(--faint);text-align:center}
+
+/* notes panel */
+.notes-title{font-size:17px;font-weight:800;letter-spacing:-.02em;margin:0 0 3px}
+.notes-role{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);font-weight:850;margin-bottom:16px}
+.notes dl{margin:0}
+.notes dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:850;margin:15px 0 5px}
+.notes dd{margin:0;font-size:11.5px;color:#42584E;line-height:1.55}
+.notes ul{margin:5px 0 0;padding-left:16px;font-size:11.5px;color:#42584E}
+.notes li{margin:3px 0}
+.pattern-box{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-top:16px;font-size:10.5px;color:var(--muted)}
+.pattern-box b{display:block;color:var(--primary-dark);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.a11y-row{display:flex;justify-content:space-between;font-size:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+.a11y-row:last-child{border:0}
+.a11y-row b{color:var(--primary-dark)}
+
+footer{padding:22px 0 40px;color:var(--faint);font-size:10.5px;text-align:center;border-top:1px solid var(--line)}
+
+@media(max-width:1160px){.grid{grid-template-columns:210px 390px}.notes{grid-column:1/-1}.system-strip .wrap{grid-template-columns:repeat(2,1fr);row-gap:14px}.hero-grid{grid-template-columns:1fr}.hero-facts{justify-content:flex-start}}
+@media(max-width:760px){.wrap{padding:0 14px}.hero-grid h1{font-size:29px}.grid{grid-template-columns:1fr}.rail{max-height:210px}.stage{order:-1}.device{width:min(390px,100%)}.system-strip .wrap{grid-template-columns:1fr 1fr}.sys-item{padding:0 10px}}
+</style>
+</head>
+<body>
+
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-4 3-6 6-6s5.4 2 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.5M17 14c2.4.8 3.8 2.8 4 6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.7-4.5 3.6-7 7.5-7s6.8 2.5 7.5 7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 5 3.2 8 7.5 9 4.3-1 7.5-4 7.5-9V6L12 3z"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 5 3.2 8 7.5 9 4.3-1 7.5-4 7.5-9V6L12 3z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.3-.9L12 3z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16H6l1.5-3V9a4.5 4.5 0 0 1 9 0v4L18 16z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M2 20h20"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .8-1.5 1.3-1.5 2.5M12 17h.01"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4M9 12h10"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4.5-7 9-7 9z"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M20 15a3 3 0 0 1-3 3H8l-4 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8 11 8-4M8 13l8 4"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1c4-2 8 2 12 0v10c-4 2-8-2-12 0"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4-1 10-10-3-3L5 16l-1 4z"/><path d="m14 6 3 3"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z"/><path d="M4 17h15"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 3 20h18L12 4z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-signal" viewBox="0 0 24 24"><path d="M3 18h2v3H3zM8 14h2v7H8zM13 10h2v11h-2zM18 6h2v15h-2z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8c6-5 14-5 20 0M5 12c4-3.5 10-3.5 14 0M8.5 16c2-1.7 5-1.7 7 0"/><circle cx="12" cy="19" r="1"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4"/><path d="M5 10h11v4H5z" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<header class="site-hero">
+  <div class="wrap">
+    <div class="brandline"><span class="brandmark">M</span> MoMA · Design system 2.0</div>
+    <div class="hero-grid">
+      <div>
+        <div class="kicker">High-fidelity interface design</div>
+        <h1>A marketplace that feels<br/>as disciplined as <em>the dojo.</em></h1>
+        <p>A complete visual rebuild of the MoMA Android experience. Same role-aware architecture and trust rules from the UX specification — expressed with confident typography, calm surfaces, tactile cards and the interaction patterns people already know.</p>
+      </div>
+      <div class="hero-facts">
+        <span>33 designed screens</span><span>5 role journeys</span><span>Material 3 tokens</span><span>48 dp targets</span><span>Server-authoritative states</span>
+      </div>
+    </div>
+    <div class="replacement-note">Replaces the low-fidelity wireframe prototype · <b>MoMA_Interactive_Prototype.html</b> preserved for reference</div>
+  </div>
+</header>
+
+<section class="system-strip"><div class="wrap">
+  <div class="sys-item"><small>Brand palette</small><div class="swatches"><i style="background:#0D5C42"></i><i style="background:#147A58"></i><i style="background:#1E9A70"></i><i style="background:#E8F6EE"></i><i style="background:#F4F8F6"></i><i style="background:#13251E"></i></div></div>
+  <div class="sys-item"><small>Type scale</small><b>24 / 16 / 12 / 10 sp · Semi-condensed display</b></div>
+  <div class="sys-item"><small>Shape &amp; depth</small><b>14–20 dp radius · soft green-tinted elevation</b></div>
+  <div class="sys-item"><small>Motion</small><b>160–200 ms cross-fades · no decorative loops</b></div>
+</div></section>
+
+<main class="wrap">
+  <div class="work-head">
+    <div><h2>Screen explorer</h2><p>Choose a journey, then tap any screen in the phone. Navigation, filters, tabs, slots, ratings and payment states are interactive.</p></div>
+    <div class="flowbar" id="flows"></div>
+  </div>
+  <div class="grid">
+    <aside class="panel"><h3>Journey screens</h3><div class="rail" id="rail"></div><div class="rail-meta">Every screen maps to the 13 wireframe areas in <b>03_UX_UI_Design_Specs.md</b>.</div></aside>
+    <section class="stage">
+      <div class="device" id="device">
+        <div class="viewport" id="viewport">
+          <div class="statusbar" id="statusbar"><span>9:41</span><span class="status-right"><svg class="icon"><use href="#i-signal"/></svg><svg class="icon"><use href="#i-wifi"/></svg><svg class="icon"><use href="#i-battery"/></svg></span></div>
+          <div class="app-scroll" id="screen"></div>
+          <nav class="bottom-nav" id="nav" aria-label="Primary navigation"></nav>
+          <div class="sheet" id="sheet"><div class="sheet-back" data-action="close-sheet"></div><div class="sheet-card">
+            <div class="sheet-grab"></div><h4>Refine results</h4>
+            <div class="field"><span>Focus style</span><select><option>All styles</option><option>Judo for BJJ</option><option>Wrestling · ADCC</option><option>Striking · ACBJJ</option></select></div>
+            <div class="field"><span>Credential</span><select><option>Verified only (required)</option><option>Black belt verified</option><option>Competition record</option></select></div>
+            <div class="chips" data-multi><button class="chip ghost active">Mon</button><button class="chip ghost">Tue</button><button class="chip ghost active">Wed</button><button class="chip ghost">Thu</button><button class="chip ghost">Fri</button></div>
+            <div class="callout"><svg class="icon"><use href="#i-shield-check"/></svg><div>Credential verification is a hard gate. Unverified coaches are excluded before ranking.</div></div>
+            <button class="btn primary" data-action="apply-filters">Show 4 verified coaches</button>
+          </div></div>
+          <div class="toast" id="toast"><svg class="icon sm"><use href="#i-check"/></svg><span id="toastText"></span></div>
+        </div>
+      </div>
+      <div class="controls"><button id="prev">← Previous</button><button id="next">Next screen →</button></div>
+      <div class="hint">Filters, tabs, chips, slots, stars, toggles and search are live in the prototype.</div>
+    </section>
+    <aside class="panel notes" id="notes"></aside>
+  </div>
+</main>
+
+<footer>MoMA high-fidelity interface system · Design artefact only — payments and API calls are simulated.</footer>
+
+<script>
+/* ============ Helpers ============ */
+const I=(n,c='')=>'<svg class="icon '+c+'" aria-hidden="true"><use href="#i-'+n+'"></use></svg>';
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const PAL=[['#0E6A4C','#8FD3AE','#EBC09A','#38271F','#F7F1E9'],['#2C5E9E','#9CC3E8','#D9A781','#3B2A20','#EFF4F8'],['#915522','#E0A86E','#E8B994','#3A2418','#FBF2E7'],['#4B5B8F','#A9B4E0','#E4B992','#2C2740','#F2F3FA'],['#1C6E6A','#8AD2CB','#DCAE8A','#2B2724','#EFF7F5']];
+let uid=0;
+function av(name,size=44){
+  const h=[...name].reduce((a,c)=>a+c.charCodeAt(0),0)%PAL.length,p=PAL[h],id='g'+(++uid);
+  return '<span class="avatar" style="width:'+size+'px;height:'+size+'px"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+p[0]+'"/><stop offset="1" stop-color="'+p[1]+'"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#'+id+')"/><path d="M11 64c2-13 9-19 21-19s19 6 21 19" fill="'+p[4]+'"/><circle cx="32" cy="24" r="10.5" fill="'+p[2]+'"/><path d="M20 24c0-9 5-14 12-14s12 5 12 14c-3-5-7-7-12-7s-9 2-12 7z" fill="'+p[3]+'"/><circle cx="28.5" cy="25" r="1" fill="'+p[3]+'"/><circle cx="35.5" cy="25" r="1" fill="'+p[3]+'"/><path d="M29 30c2 1.8 4 1.8 6 0" stroke="'+p[3]+'" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg></span>';
+}
+const tag=(t,tone='')=>'<span class="tag '+tone+'">'+t+'</span>';
+const status=(t,tone='ok')=>'<span class="status tag '+tone+'" aria-label="Status: '+t+'">'+t+'</span>';
+const rate=n=>'<span class="rating">'+I('star','sm')+' '+n+'</span>';
+const sec=(t,actionHTML='')=>'<div class="sec-head"><h3>'+t+'</h3>'+actionHTML+'</div>';
+const bar=(title,opt={})=>'<div class="appbar"><button class="icon-btn plain" data-nav="back" aria-label="Go back">'+I('back')+'</button><div class="txt"><h4>'+title+'</h4>'+(opt.sub?'<small>'+opt.sub+'</small>':'')+'</div>'+(opt.right||'')+'</div>';
+const field=(label,ph,type='text')=>'<label class="field"><span>'+label+'</span><input type="'+type+'" placeholder="'+ph+'" aria-label="'+label+'"></label>';
+const selectF=(label,opts)=>'<label class="field"><span>'+label+'</span><select aria-label="'+label+'">'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select></label>';
+const areaF=(label,ph,h=88)=>'<label class="field"><span>'+label+'</span><textarea placeholder="'+ph+'" style="min-height:'+h+'px" aria-label="'+label+'"></textarea></label>';
+const chips=(arr,active=0,multi=false)=>'<div class="chips"'+(multi?' data-multi':'')+'>'+arr.map((c,i)=>'<button class="chip'+(i===active?' active':'')+'">'+c+'</button>').join('')+'</div>';
+const btn=(label,nav,action='',kind='')=>'<button class="btn '+kind+'" '+(action?'data-action="'+action+'"':'data-nav="'+nav+'"')+'>'+label+I('arrow','sm')+'</button>';
+const sticky=(label,nav,action='')=>'<div class="sticky-cta">'+btn(label,nav,action)+'</div>';
+const ring=n=>'<span class="ring" style="--v:'+n+'%" aria-label="'+n+' percent match"><b>'+n+'%</b></span>';
+function coachCard(name,sub,meta,price,rating,nav,extra=''){
+  return '<article class="coach-card" data-nav="'+nav+'" tabindex="0" role="button" aria-label="View '+esc(name)+' profile"><div class="cc-top">'+av(name,46)+'<div class="cc-id"><b>'+name+'</b><small>'+sub+'</small><div class="cc-badges">'+tag('✓ Verified','ok')+rate(rating)+'</div></div></div><div class="cc-foot"><span>'+I('clock','sm')+' '+meta+'</span><b>'+price+'</b></div>'+extra+'</article>';
+}
+function listRow(icon,title,sub,nav,right=''){return '<div class="listrow" data-nav="'+nav+'" role="button" tabindex="0"><span class="li-ico">'+I(icon)+'</span><span class="txt"><b>'+title+'</b><small>'+sub+'</small></span>'+(right||'<span class="chev">'+I('chev','sm')+'</span>')+'</div>';}
+const bars=(vals,labels)=>'<div class="chart bars">'+vals.map((v,i)=>'<div class="bar-col"><i style="height:'+v+'%"></i><span>'+labels[i]+'</span></div>').join('')+'</div>';
+const slot=(t,state='free')=>'<button class="slot '+state+'" '+(state==='free'?'data-slot aria-label="Select '+t+'"':state==='booked'?'disabled aria-label="'+t+' unavailable"':'aria-label="'+t+' on hold"')+'>'+t+'</button>';
+const srow=(k,v,cls='')=>'<div class="srow '+(cls==='total'?'total':'')+'"><span>'+k+'</span><b>'+v+'</b></div>';
+
+/* ============ Screen definitions ============ */
+const S={};
+const DEF=(id,flow,title,purpose,elements,behaviour,render,patterns)=>{S[id]={id,flow,title,purpose,elements,behaviour,render,patterns};};
+
+/* --- Onboarding & auth --- */
+DEF('splash','student','Splash / onboarding','Brand entry point on first launch; session restore skips this screen.','Brand mark, value proposition, Get started / Sign in','First launch only; terms and privacy linked; route by role claim after sign-in.',()=>
+ '<div class="auth-wrap"><div class="auth-logo">M</div><h1>The dojo is<br/>wherever you are.</h1><p class="auth-sub">Book verified martial arts coaches near you, on your schedule.</p><div class="callout" style="margin-top:22px">'+I('shield-check')+'<div>Every coach is credential-checked before they appear in matching.</div></div>'+btn('Get started','register')+'<button class="btn ghost" data-nav="login" style="margin-top:9px">I already have an account</button></div>','Brand-first onboarding · Trust signal before action');
+
+DEF('login','student','Login','Authenticate returning users and restore a secure session.','Email, password with visibility toggle, social sign-in, recovery','Supabase token endpoint; JWT in secure storage; route by role claim.',()=>
+ '<div class="auth-wrap"><div class="auth-logo" style="width:48px;height:48px;border-radius:16px;font-size:13px">M</div><h1>Welcome back</h1><p>Sign in to continue training.</p>'+field('Email address','name@example.com','email')+'<label class="field"><span>Password</span><input type="password" id="pw" placeholder="Enter your password" aria-label="Password"><button class="icon-btn plain" data-action="eye" style="position:absolute;right:8px;margin-top:-46px" aria-label="Show password">'+I('eye')+'</button></label><div style="text-align:right;margin:-4px 0 12px"><button class="text-btn" data-nav="forgot">Forgot password?</button></div>'+btn('Sign in','home','','dark')+'<div class="divider">or continue with</div><div class="social-row"><button data-action="social">Google</button><button data-action="social">Facebook</button></div><p style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:16px">New to MoMA? <button class="text-btn" data-nav="register">Create an account</button></p></div>','Progressive disclosure · Familiar auth pattern');
+
+DEF('register','student','Register','Create an account and choose the role that fits the user.','Name, phone, email, password, role choice, privacy consent','Supabase Auth signup; profile row created; privacy notice accepted before submit.',()=>
+ bar('Join MoMA',{sub:'Step 1 of 1'})+'<h1 class="headline">Create your account</h1><p class="subline">Start training or start teaching in minutes.</p>'+field('Full name','Your name')+field('Phone number','012-345 6789','tel')+field('Email address','name@example.com','email')+field('Password','At least 8 characters','password')+'<div class="field"><span>I want to</span>'+chips(['Learn as a student','Teach as an instructor'])+'</div>'+btn('Continue','home')+'<div class="divider">or sign up with</div><div class="social-row"><button data-action="social">Google</button><button data-action="social">Facebook</button></div><p style="font-size:9.5px;color:var(--faint);text-align:center;margin-top:14px">By continuing you agree to the Terms and acknowledge the Privacy Notice.</p>','Single-step form · Role selection · Inline consent');
+
+DEF('forgot','student','Forgot password','Recover access without revealing whether an account exists.','Email field, reset action, neutral confirmation','POST /auth/v1/recover; always shows the same neutral success message.',()=>
+ bar('Reset password')+'<div style="text-align:center;margin:22px 0 16px"><div class="avatar sq" style="width:66px;height:66px;margin:auto;background:var(--accent);color:var(--primary)">'+I('lock','lg')+'</div><h1 class="headline" style="font-size:20px">Forgot your password?</h1><p class="subline">We will email a secure reset link if an account matches.</p></div>'+field('Email address','name@example.com','email')+btn('Send reset link','login','','dark')+'<button class="btn ghost" data-nav="login" style="margin-top:9px">Back to sign in</button><div class="callout">'+I('info')+'<div>For your security, the confirmation is the same whether or not the email is registered.</div></div>','Neutral error handling · Security copy');
+
+/* --- Student discovery --- */
+DEF('home','student','Home · focus styles','Discovery entry limited to the gym’s six focus styles.','Location greeting, search entry, six style tiles, recommended coaches','Room-first render; API refresh; saved-data banner shown when offline.',()=>
+ '<div class="row" style="padding:6px 0 2px"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:16px;font-weight:900;letter-spacing:-.04em;color:var(--primary-dark)">MoMA</span>'+tag('BJJ GYM','ok')+'</div><div style="display:flex;gap:7px"><button class="icon-btn plain" data-action="notify" aria-label="Notifications">'+I('bell')+'</button><span style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px">'+I('pin','sm')+' JB</span></div></div>'+
+ '<div class="hero-card" style="margin-top:8px"><h2>Build your weekly team</h2><p>Focus styles for the current program.</p><div class="hero-search" data-nav="search">'+I('search','sm')+'<span>Search Judo, Wrestling, Muay Thai…</span></div></div>'+
+ sec('Focus styles','<button class="text-btn" data-nav="search">See all</button>')+'<div class="tiles">'+[['BJJ Gi','#0D5C42','i-shield'],['BJJ No-Gi','#1E7B62','i-spark'],['Judo','#315F9C','i-users'],['Wrestling','#A1632C','i-chart'],['Kyokushin','#8A3B3B','i-star'],['Muay Thai','#6C4B8F','i-play']].map(t=>'<div class="tile" data-nav="search" role="button" tabindex="0"><div class="tile-art" style="background:linear-gradient(135deg,'+t[1]+','+t[1]+'bb)">'+I(t[2])+'</div><span>'+t[0]+'</span></div>').join('')+'</div>'+
+ sec('Needed for your program')+'<div class="notice">'+I('info','sm')+' Showing saved data · refreshing in background</div>'+coachCard('Kenji Watanabe','Judo 4th dan · 12 years','Wed 19:00 · Judo for BJJ','RM 150 / hr','5.0','instructor')+coachCard('Mei Ling Tan','Muay Thai coach · licensed','Fri 20:00 · Striking / ACBJJ','RM 130 / hr','4.8','instructor'),'Familiar tile grid · Cached-read banner · Card-first discovery');
+
+DEF('search','student','Search & discovery','Find coaches by style, credential, ruleset, day and price.','Search field with suggestions, filter chips, verified results, Match Me','Debounced query; hard verified-credential filter; cached results into Room.',()=>
+ bar('Search',{right:'<button class="icon-btn" data-action="filters" aria-label="Open filters">'+I('filter')+'</button>'})+
+ '<div class="hero-search" style="box-shadow:none;border:1px solid var(--line)">'+I('search','sm')+'<input id="q" placeholder="Try “Judo black belt” or “ADCC”" aria-label="Search coaches"><button class="icon-btn plain" data-action="clear-q" aria-label="Clear search" style="width:26px;height:26px">'+I('x','sm')+'</button></div><div id="suggest" style="display:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:10.5px;color:var(--muted);margin-top:6px">Judo for BJJ · Wrestling · ADCC · Kyokushin · Muay Thai · ACBJJ</div>'+
+ chips(['All styles','Black belt verified','ADCC','ACBJJ','Wed / Thu / Fri'])+'<div class="callout" style="margin-top:10px">'+I('shield-check')+'<div><b>Verified credentials only.</b> Unverified coaches are hidden from results.</div></div>'+
+ sec('4 coaches found','<button class="text-btn" data-action="filters">Refine</button>')+'<div id="resultList">'+coachCard('Kenji Watanabe','Judo 4th dan · BJJ throws','Wed 19:00 · Gi / No-Gi','RM 150 / hr','5.0','instructor')+coachCard('Rafiq Uddin','Wrestler · ADCC record','Thu 19:00 · No-Gi','RM 160 / hr','4.9','instructor')+coachCard('Sanjay Rao','Kyokushin black belt','Fri 19:00 · ACBJJ','RM 140 / hr','4.9','instructor')+coachCard('Mei Ling Tan','Muay Thai coach · licensed','Fri 20:00 · ACBJJ','RM 130 / hr','4.8','instructor')+'</div><button class="btn ghost" data-nav="matching" style="margin-bottom:6px">'+I('spark','sm')+' Not sure? Use Match Me</button>','Autocomplete · AND-combined filters · Hard credential gate');
+
+DEF('instructor','student','Coach detail & slot picker','Evaluate a specialist coach against the gym requirement and pick a slot.','Program banner, credential badges, availability grid, credential check, CTA','Slot picker calls create-booking; 10-minute hold starts on the server; gate must pass.',()=>
+ '<div class="band"><svg viewBox="0 0 360 112" preserveAspectRatio="none"><path d="M0 92 60 50 120 92 180 50 240 92 300 50 360 92" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2"/><circle cx="300" cy="30" r="46" fill="none" stroke="#fff" stroke-opacity=".18"/></svg><span class="band-label">Judo for BJJ · Wed 19:00</span></div>'+
+ bar('Kenji Watanabe',{sub:'Judo 4th dan · 12 years teaching',right:'<button class="icon-btn" data-action="share" aria-label="Share coach">'+I('share')+'</button>'})+
+ '<div style="display:flex;gap:10px;align-items:center;margin-top:6px">'+av('Kenji Watanabe',54)+'<div><b style="font-size:14px">Kenji Watanabe</b><div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">'+tag('✓ Black belt verified')+rate('5.0 (64)')+'</div></div></div>'+
+ '<p class="muted" style="margin:14px 0 10px">Throws, ukemi and grip fighting adapted for BJJ players — in gi and no-gi.</p>'+chips(['Judo for BJJ','Gi + No-Gi','All levels'])+
+ sec('Available this week','<button class="text-btn" data-action="notify">Refresh</button>')+'<div class="slots">'+slot('Wed 19:00')+slot('Wed 20:00')+slot('Wed 21:00','held')+slot('Sat 10:00','booked')+slot('Fri 19:00')+slot('Fri 20:00','booked')+'</div><div class="legend"><span><i style="background:#D5EEDF"></i>Free</span><span><i style="background:#FDF1DD"></i>Held · 10 min</span><span><i style="background:#EEF2EF"></i>Booked</span></div>'+
+ sec('Credential check')+'<div class="summary">'+srow('Dan certificate','Verified')+srow('Coaching licence','Verified')+srow('Ruleset','Gi / No-Gi')+'</div>'+sticky('Book Judo for BJJ · <span data-slot-label>Wed 19:00</span> · RM 150','checkout'),'State-visible slots · Credential gate · Sticky primary action');
+
+DEF('matching','student','Credential-gated matching','Rank coaches only after mandatory credential and ruleset checks.','Program, credential, ruleset, day, budget, ranked cards, score explanation','Server applies hard gate first, then weighted score; UI explains each factor.',()=>
+ bar('Match me',{sub:'Credential gate applied first'})+'<h1 class="headline">Find your coach</h1><p class="subline">Unverified coaches are excluded before scoring.</p>'+
+ selectF('Program style',['Judo for BJJ','Wrestling for No-Gi BJJ','Striking for No-Gi BJJ'])+selectF('Required credential',['Judo black belt (verified)','Wrestler · competition record','Kyokushin black belt (verified)','Muay Thai coach licence'])+selectF('Ruleset',['Gi / No-Gi','ADCC','ACBJJ Battle Jiu-Jitsu'])+field('Max budget (RM)','150','number')+chips(['Mon','Tue','Wed','Thu','Fri'])+btn('Show gated matches','matching')+
+ sec('Top matches')+'<div class="summary" style="display:flex;align-items:center;gap:10px">'+ring(96)+'<div style="flex:1"><b style="font-size:12px">Kenji Watanabe</b><div class="muted" style="margin-top:3px">Judo black belt verified · Wed · Gi / No-Gi</div></div>'+I('chev','sm')+'</div><div class="summary" style="display:flex;align-items:center;gap:10px">'+ring(89)+'<div style="flex:1"><b style="font-size:12px">Sanjay Rao</b><div class="muted" style="margin-top:3px">Kyokushin black belt · Fri · ACBJJ</div></div>'+I('chev','sm')+'</div>'+
+ '<div class="callout">'+I('info')+'<div><b>Why this ranking?</b> Style 30% · availability 25% · distance 15% · rating 15% · price 10% · verification 5%.</div></div>','Explainable ranking · Scored cards · Hard gate disclosure');
+
+/* --- Student transaction --- */
+DEF('checkout','student','Checkout · 4 steps','Move from lesson and slot to a confirmed, paid booking.','Step progress, order summary, payment method, disclosure, pay action','Server issues PaymentIntent with commission; Stripe SDK confirms; webhook confirms booking.',()=>
+ bar('Checkout',{sub:'Encrypted · Stripe',right:'<span class="tag ok">'+I('lock','sm')+' SECURE</span>'})+
+ '<div class="progress"><span class="on">Lesson</span><i class="on"></i><span class="on">Slot</span><i class="on"></i><span class="on">Payment</span><i></i><span>Review</span></div>'+
+ '<div class="summary"><div class="srow"><span>Program</span><b>Judo for BJJ · 60 min</b></div><div class="srow"><span>Coach</span><b>Kenji Watanabe</b></div><div class="srow"><span>Ruleset</span><b>Gi / No-Gi</b></div><div class="srow"><span>When</span><b><span data-slot-label>Wed 19:00</span></b></div><div class="srow"><span>Where</span><b>Gym · Johor Bahru</b></div></div>'+
+ sec('Payment method','<button class="text-btn" data-action="notify">Change</button>')+'<div class="listrow"><span class="li-ico">'+I('card')+'</span><span class="txt"><b>Visa ending 4242</b><small>Expires 08/28</small></span><span class="chev">'+I('chev','sm')+'</span></div>'+
+ '<div class="summary">'+srow('Lesson price','RM 150.00')+srow('Service fee (15%)','Included')+srow('Status','<span id="payState" class="tag warn">PENDING</span>')+'<div class="srow total"><span>Total today</span><span>RM 150.00</span></div></div>'+
+ sticky('<span id="payBtnText">Pay RM 150.00 securely</span>','bookings','pay')+'<p style="font-size:9.5px;color:var(--faint);text-align:center;padding-bottom:4px">Card details handled by Stripe. MoMA never stores your card number.</p>','Server-authoritative money · Transparent fees · Focused checkout');
+
+DEF('bookings','student','Bookings','Track booking state and expose the right next action.','Upcoming / Completed / Cancelled tabs, status chips, contextual actions','Observes Room; live status from API; server state always wins.',()=>
+ '<div class="row" style="padding:6px 0"><h1 class="headline" style="margin:0">My bookings</h1><button class="icon-btn plain" data-action="notify" aria-label="Booking help">'+I('help')+'</button></div>'+
+ '<div class="pill-nav"><button class="active" data-tab="bk" data-p="up">Upcoming</button><button data-tab="bk" data-p="done">Completed</button><button data-tab="bk" data-p="old">Cancelled</button></div>'+
+ '<div data-pg="bk" data-p="up"><div class="card"><div class="row"><b>Judo for BJJ</b>'+status('CONFIRMED')+'</div><div class="muted" style="margin-top:6px">Kenji Watanabe · Wed 19:00 · Gi / No-Gi</div><div class="row"><span class="muted">RM 150.00 · paid</span><button class="btn ghost small" data-nav="instructor">View details</button></div></div><div class="card"><div class="row"><b>Striking for No-Gi BJJ</b>'+status('PENDING','warn')+'</div><div class="muted" style="margin-top:6px">Mei Ling Tan · Fri 20:00 · ACBJJ</div><div class="callout warn" style="margin:10px 0">'+I('clock')+'<div>Awaiting payment confirmation. The slot is held for 10 minutes.</div></div><div class="row"><span class="muted">Awaiting webhook</span><button class="btn small" data-nav="checkout">Complete payment</button></div></div></div>'+
+ '<div data-pg="bk" data-p="done" style="display:none"><div class="card"><div class="row"><b>Wrestling for No-Gi BJJ</b>'+status('COMPLETED','info')+'</div><div class="muted" style="margin-top:6px">Rafiq Uddin · Thu 19:00 · ADCC</div><div class="row"><span class="muted">RM 160.00</span><button class="btn small" data-nav="review">Rate session</button></div></div><div class="card"><div class="row"><b>BJJ Gi open mat</b>'+status('COMPLETED','info')+'</div><div class="muted" style="margin-top:6px">Internal coach · Sat 10:00</div><div class="row"><span class="muted">Included</span><button class="btn ghost small" data-nav="dispute">Raise dispute</button></div></div></div>'+
+ '<div data-pg="bk" data-p="old" style="display:none"><div class="card"><div class="row"><b>Muay Thai private</b>'+status('CANCELLED','neutral')+'</div><div class="muted" style="margin-top:6px">Mei Ling Tan · 20 Oct · refunded RM 130.00</div></div><div class="callout">'+I('info')+'<div>Need help with a cancelled booking? <button class="text-btn" data-nav="dispute">Open a dispute</button></div></div></div>',
+ 'Status as text + colour · Tabbed history · Contextual next action');
+
+DEF('review','student','Rating & review composer','Collect one verified review from a completed booking.','Five-star rating, quick tags, text, optional media, submit','Unique booking_id; media queued offline; uploads retried with idempotency.',()=>
+ bar('Rate your session')+'<div style="text-align:center;margin-top:10px"><h1 class="headline" style="font-size:20px;margin-bottom:4px">How was your session?</h1><p class="subline">Rafiq Uddin · Wrestling · ADCC</p></div>'+
+ '<div class="stars" id="stars">'+[1,2,3,4,5].map(n=>'<button data-star="'+n+'" aria-label="'+n+' of 5 stars">★</button>').join('')+'</div><p id="starText" style="text-align:center;font-size:11px;color:var(--muted);margin:0 0 18px">Tap a star to rate</p>'+
+ sec('What stood out?')+chips(['Helpful','Easy to learn','Punctual','Great venue','Good value'],-1,true)+areaF('Your review','Share what you learned…',96)+
+ '<div class="listrow" data-action="media"><span class="li-ico">'+I('camera')+'</span><span class="txt"><b>Add photo or video</b><small>Optional · max 100 MB</small></span><span class="chev">'+I('chev','sm')+'</span></div>'+btn('Submit review','bookings','','primary'),'Star rating with TalkBack text · Tag chips · Media attachment');
+
+DEF('dashboard','student','Training dashboard','Show personal progress with configurable widgets.','Period tabs, stat cards, activity chart, widget switches','analytics/dashboard API; widget preferences synced through outbox.',()=>
+ bar('My progress',{sub:'Your training at a glance',right:'<button class="icon-btn" data-action="notify" aria-label="Widget settings">'+I('settings')+'</button>'})+h1('Your training')+
+ '<div class="pill-nav"><button class="active" data-tab="ds" data-p="today">Today</button><button data-tab="ds" data-p="week">Week</button><button data-tab="ds" data-p="month">Month</button></div>'+
+ '<div data-pg="ds" data-p="today"><div class="stat-grid"><div class="stat"><b>1</b><small>Session today</small></div><div class="stat"><b>60m</b><small>Training time</small></div><div class="stat"><b>Medium</b><small>Intensity</small></div><div class="stat"><b>320</b><small>Calories est.</small></div></div>'+sec('Last 7 days')+bars([38,55,42,70,48,86,64],['M','T','W','T','F','S','S'])+'</div>'+
+ '<div data-pg="ds" data-p="week" style="display:none"><div class="stat-grid"><div class="stat"><b>4</b><small>Sessions</small></div><div class="stat"><b>3h 40m</b><small>Training time</small></div><div class="stat"><b>1,120</b><small>Calories</small></div><div class="stat"><b>+8%</b><small>vs last week</small></div></div>'+sec('Last 4 weeks')+bars([45,62,58,81],['W1','W2','W3','W4'])+'</div>'+
+ '<div data-pg="ds" data-p="month" style="display:none"><div class="stat-grid"><div class="stat"><b>16</b><small>Sessions</small></div><div class="stat"><b>14h 20m</b><small>Training time</small></div><div class="stat"><b>4.9</b><small>Avg rating</small></div><div class="stat"><b>3</b><small>Styles trained</small></div></div>'+sec('Consistency')+bars([52,68,74,90],['Jun','Jul','Aug','Sep'])+'</div>'+
+ sec('Widgets')+'<div class="listrow"><span class="li-ico">'+I('chart')+'</span><span class="txt"><b>Sessions &amp; duration</b><small>On · position 1</small></span><span class="toggle on" role="switch" aria-checked="true"></span></div><div class="listrow"><span class="li-ico">'+I('spark')+'</span><span class="txt"><b>Calories estimate</b><small>On · position 2</small></span><span class="toggle on" role="switch" aria-checked="true"></span></div><div class="listrow"><span class="li-ico">'+I('flag')+'</span><span class="txt"><b>Goal streak</b><small>Off · tap to enable</small></span><span class="toggle" role="switch" aria-checked="false"></span></div>','Period comparison · Sparkline chart · Immediate local toggle');
+
+DEF('profile','student','Profile','Own profile with portfolio and role-specific management entries.','Avatar, role badge, stats, about, account links, sign out','Edits sync via outbox; coach role unlocks the instructor workspace.',()=>
+ bar('Profile',{right:'<button class="icon-btn" data-action="notify" aria-label="Edit profile">'+I('edit')+'</button>'})+h1('Aina Nadirah')+'<p class="subline">'+tag('STUDENT')+' · Johor Bahru</p>'+
+ '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">'+av('Aina Nadirah',64)+'<div><b style="font-size:14px">Aina Nadirah</b><div class="muted" style="margin-top:4px">Training BJJ twice a week</div><div style="margin-top:6px">'+rate('4.8')+'</div></div></div>'+
+ '<div class="stat-grid"><div class="stat"><b>12</b><small>Lessons taken</small></div><div class="stat"><b>4.8</b><small>Student rating</small></div></div>'+sec('About')+'<p class="muted">Beginner BJJ practitioner aiming to train consistently and build a steady weekly team.</p>'+sec('Account')+
+ listRow('edit','Edit profile','Name, bio and contact details','profile')+listRow('shield','Privacy & data','PDPA notice and deletion request','support')+listRow('bell','Notifications','Booking and payment alerts','support')+listRow('help','Help & support','Contact the MoMA team','support')+listRow('grid','Coach workspace','Switch to instructor view','instructor_home')+'<button class="btn ghost" data-nav="login" style="margin-top:8px">'+I('logout','sm')+' Sign out</button>','Identity header · Grouped settings · Clear sign-out');
+
+/* --- Gym journey --- */
+DEF('gym_home','gym','Gym home · program coverage','Owner dashboard for staffing the seven-day curriculum.','Coverage KPIs, open requirements, management shortcuts','Data scoped to gym id via RLS; shortlists include verified credentials only.',()=>
+ '<div class="row" style="padding:6px 0"><div style="font-size:16px;font-weight:900;letter-spacing:-.04em;color:var(--primary-dark)">MoMA Gym</div>'+tag('OWNER')+'</div><div class="hero-card"><h2>Build your team</h2><p>4 specialist roles needed for the weekly program.</p><div class="stat-grid" style="gap:7px"><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">4</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Open roles</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">11</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Verified candidates</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">7</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Days covered</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">2</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Internal coaches</small></div></div></div>'+
+ sec('Open requirements','<button class="text-btn" data-nav="gym_curriculum">Curriculum</button>')+
+ '<div class="card tap" data-nav="coach_shortlist"><div class="row"><b>Wed · Judo black belt</b>'+tag('HIRING','warn')+'</div><div class="muted" style="margin-top:5px">Judo for BJJ · Gi / No-Gi</div><div class="row" style="margin-top:10px"><span class="rating">11 verified matches</span><span class="tag ok">Review shortlist →</span></div></div>'+
+ '<div class="card tap" data-nav="coach_shortlist"><div class="row"><b>Thu · Wrestler</b>'+tag('HIRING','warn')+'</div><div class="muted" style="margin-top:5px">Wrestling for No-Gi BJJ · ADCC</div></div>'+
+ '<div class="card tap" data-nav="coach_shortlist"><div class="row"><b>Fri · Kyokushin + Muay Thai</b>'+tag('HIRING','warn')+'</div><div class="muted" style="margin-top:5px">Striking for No-Gi BJJ · ACBJJ Battle Jiu-Jitsu</div></div>'+
+ sec('Manage')+listRow('calendar','Weekly curriculum','Mon–Sun program and rulesets','gym_curriculum')+listRow('users','Coach shortlist','Credential-gated candidates','coach_shortlist')+listRow('plus','Post a requirement','Hire for a program slot','gym_post_role')+listRow('book','Program bookings','Confirmed coach sessions','bookings'),'KPI hero · Task-oriented cards · Shortcut list');
+
+DEF('gym_curriculum','gym','Weekly curriculum','Publish the Mon–Sun program with ruleset tags and coverage.','Seven-day timeline, style, ruleset, coverage status','Stored in gym_programs / program_schedules; edits replay from outbox.',()=>
+ bar('Weekly curriculum',{sub:'Program schedule',right:'<button class="icon-btn" data-action="notify" aria-label="Edit curriculum">'+I('edit')+'</button>'})+h1('Program schedule')+'<p class="subline">Coverage across seven days, including open mat.</p>'+
+ [['Mon','BJJ Gi','Internal BJJ coach · Gi',''],['Tue','BJJ No-Gi','Internal coach · No-Gi',''],['Wed','Judo for BJJ','Hiring: verified Judo black belt','warn'],['Thu','Wrestling for No-Gi BJJ','Hiring: verified wrestler · ADCC','warn'],['Fri','Striking for No-Gi BJJ','Hiring: Kyokushin + Muay Thai · ACBJJ','warn'],['Sat','BJJ Gi open mat','Open supervision',''],['Sun','BJJ No-Gi open mat','Open supervision','']].map(r=>'<div class="dayline"><span class="day">'+r[0]+'</span><div class="card" style="flex:1;margin:0;padding:10px 12px"><div class="row"><b>'+r[1]+'</b>'+(r[3]?tag('HIRING','warn'):tag('COVERED','ok'))+'</div><div class="muted" style="margin-top:4px">'+r[2]+'</div></div></div>').join('')+
+ '<div class="callout">'+I('shield-check')+'<div>Only coaches with a verified credential can fill Wed–Fri roles.</div></div>'+btn('Fill open roles','coach_shortlist'),'Timeline pattern · Coverage status · Ruleset labels');
+
+DEF('coach_shortlist','gym','Coach shortlist','Review candidates after credential and ruleset screening.','Role chips, ranked cards, credential badges, match score','Candidates without the verified required credential never appear.',()=>
+ bar('Coach shortlist',{sub:'11 verified candidates',right:'<button class="icon-btn" data-action="filters" aria-label="Filter candidates">'+I('filter')+'</button>'})+h1('Verified candidates')+'<p class="subline">Ranked for Wed · Judo for BJJ.</p>'+chips(['All roles','Judo','Wrestling','Kyokushin','Muay Thai'])+sec('Recommended')+
+ '<div class="card tap" data-nav="coach_profile"><div class="row">'+av('Kenji Watanabe',42)+ring(96)+'</div><b style="display:block;margin-top:8px;font-size:12.5px">Kenji Watanabe</b><div class="muted" style="margin-top:3px">Judo 4th dan verified · Wed 19:00 · Gi / No-Gi</div><div class="row" style="margin-top:9px">'+rate('5.0')+'<span class="tag ok">'+I('shield-check','sm')+' GATE PASSED</span></div></div>'+
+ '<div class="card tap" data-nav="coach_profile"><div class="row">'+av('Rafiq Uddin',42)+ring(93)+'</div><b style="display:block;margin-top:8px;font-size:12.5px">Rafiq Uddin</b><div class="muted" style="margin-top:3px">ADCC record verified · Thu 19:00</div><div class="row" style="margin-top:9px">'+rate('4.9')+'<span class="tag ok">'+I('shield-check','sm')+' GATE PASSED</span></div></div>'+
+ '<div class="card tap" data-nav="coach_profile"><div class="row">'+av('Sanjay Rao',42)+ring(89)+'</div><b style="display:block;margin-top:8px;font-size:12.5px">Sanjay Rao</b><div class="muted" style="margin-top:3px">Kyokushin black belt · Fri 19:00 · ACBJJ</div><div class="row" style="margin-top:9px">'+rate('4.9')+'<span class="tag ok">'+I('shield-check','sm')+' GATE PASSED</span></div></div>'+btn('Post another requirement','gym_post_role','','ghost'),'Score rings · Gate badges · Compare at a glance');
+
+DEF('coach_profile','gym','Coach evaluation','Inspect credentials, ruleset experience and fit before an offer.','Document verification, score breakdown, availability, offer action','Verification state comes from admin; booking enabled only when gate passes.',()=>
+ '<div class="band" style="height:84px;margin-bottom:-22px"><span class="band-label">Judo for BJJ · Wed program</span></div>'+bar('Candidate profile',{sub:'Kenji Watanabe',right:'<span class="tag ok">'+I('shield-check','sm')+' VERIFIED</span>'})+
+ '<div style="display:flex;gap:10px;align-items:center;margin-top:8px">'+av('Kenji Watanabe',52)+'<div><b style="font-size:14px">Kenji Watanabe</b><div class="muted" style="margin-top:3px">Judo 4th dan · 12 years</div><div style="margin-top:5px">'+rate('5.0 (64)')+'</div></div></div>'+
+ sec('Fit breakdown')+'<div class="summary">'+srow('Style fit','30 / 30')+srow('Availability','25 / 25 · Wed 19:00')+srow('Credential','Black belt verified')+srow('Ruleset','Gi / No-Gi for BJJ')+'</div>'+
+ sec('Documents')+'<div class="listrow"><span class="li-ico">'+I('shield')+'</span><span class="txt"><b>Dan grade certificate</b><small>Issued by a recognised judo body</small></span>'+tag('VERIFIED')+'</div><div class="listrow"><span class="li-ico">'+I('book')+'</span><span class="txt"><b>Coaching licence</b><small>Checked by MoMA admin</small></span>'+tag('VERIFIED')+'</div>'+
+ '<div class="callout">'+I('info')+'<div>Offer creates a pending booking. The slot is held for 10 minutes until payment is confirmed.</div></div>'+sticky('Offer Wed session · RM 150','checkout'),'Evidence before commitment · Score transparency · Offer CTA');
+
+DEF('gym_post_role','gym','Post coach requirement','Create a hiring requirement with mandatory credential and ruleset.','Program, day, credential, ruleset, budget, publish action','Writes coach_requirements; the matching gate reads these fields; queued offline.',()=>
+ bar('Post a requirement',{sub:'Draft'})+h1('Find a specialist')+'<p class="subline">Define exactly what the weekly program needs.</p>'+
+ selectF('Program',['Judo for BJJ','Wrestling for No-Gi BJJ','Striking for No-Gi BJJ'])+field('Day and time','Wednesday, 19:00')+selectF('Required credential',['Judo black belt (verified)','Wrestler · competition record','Kyokushin black belt (verified)','Muay Thai coach licence'])+selectF('Ruleset',['Gi / No-Gi','ADCC','ACBJJ Battle Jiu-Jitsu'])+field('Budget per session (RM)','150','number')+
+ '<div class="callout warn">'+I('shield')+'<div>Only coaches whose credential is verified by MoMA admins can be matched to this requirement.</div></div>'+btn('Publish requirement','gym_home'),'Structured form · Gate disclosure · Draft state');
+
+/* --- Instructor journey --- */
+DEF('instructor_home','instructor','Instructor home','Daily operations hub for a coach.','Today stats, schedule, publish shortcuts, sales entry','All data filtered by authenticated instructor id via RLS.',()=>
+ '<div class="row" style="padding:6px 0"><div><div style="font-size:10px;color:var(--muted)">Good morning</div><div style="font-size:17px;font-weight:850;letter-spacing:-.02em">Danial</div></div>'+tag('COACH')+'</div><div class="hero-card"><h2>Your studio at a glance</h2><p>Three lessons scheduled today.</p><div class="stat-grid" style="gap:7px"><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">3</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Lessons</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">RM 360</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Gross</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">4.9</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Rating</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">82%</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Response</small></div></div></div>'+
+ sec("Today’s schedule")+'<div class="card"><div class="row"><b>BJJ Fundamentals</b>'+status('CONFIRMED')+'</div><div class="muted" style="margin-top:5px">09:00 · 3 students · 60 min</div></div><div class="card"><div class="row"><b>Private technique session</b>'+status('BOOKED','info')+'</div><div class="muted" style="margin-top:5px">15:00 · 1 student · 90 min</div></div>'+
+ sec('Quick actions')+listRow('plus','Publish a lesson','Create a new listing','listing_edit')+listRow('calendar','Set availability','Open weekly slot grid','availability')+listRow('chart','View sales report','Earnings and trends','sales_report')+listRow('wallet','Payouts','Stripe Connect transfers','payouts'),'Role-specific home · Action shortcuts · Status chips');
+
+DEF('listing_edit','instructor','Listing editor','Create or edit a lesson listing.','Title, style, ruleset, level, duration, price, description, active toggle','Owner-only RLS; changes appear in search after refresh.',()=>
+ bar('Lesson details',{sub:'Draft'})+h1('Publish a lesson')+'<p class="subline">Make it easy for students to understand your session.</p>'+field('Program title','Judo for BJJ')+selectF('Focus style',['BJJ Gi','BJJ No-Gi','Judo','Wrestling','Kyokushin Karate','Muay Thai'])+selectF('Ruleset',['Gi / No-Gi','ADCC','ACBJJ Battle Jiu-Jitsu','Open mat'])+
+ '<div class="field"><span>Level</span>'+chips(['Beginner','Intermediate','Advanced'])+'</div>'+selectF('Duration',['60 minutes','90 minutes'])+field('Price per hour (RM)','150','number')+field('City','Johor Bahru')+areaF('Description','Small-group coaching focused on safe progression…',80)+
+ '<div class="listrow"><span class="li-ico">'+I('eye')+'</span><span class="txt"><b>Listing active</b><small>Visible in search and matching</small></span><span class="toggle on" role="switch" aria-checked="true"></span></div>'+btn('Publish lesson','instructor_home'),'Creator form · Visibility toggle · Preview cues');
+
+DEF('availability','instructor','Curriculum availability','Align coach availability with weekly program slots and rulesets.','Seven-day strip, grouped slot grids, slot states, add action','Slot status and version are server-managed; held slots expire after 10 minutes.',()=>
+ bar('Weekly availability',{sub:'Week 1'})+h1('Program slots')+'<p class="subline">Held slots release after 10 minutes if unpaid.</p>'+chips(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'])+
+ sec('Wed · Judo for BJJ')+'<div class="slots">'+slot('19:00')+slot('20:00')+slot('21:00','held')+'</div>'+sec('Thu · Wrestling · ADCC')+'<div class="slots">'+slot('19:00')+slot('20:00','booked')+'</div>'+sec('Fri · Striking · ACBJJ')+'<div class="slots">'+slot('19:00')+slot('20:00')+'</div>'+
+ '<div class="legend"><span><i style="background:#D5EEDF"></i>Free</span><span><i style="background:#FDF1DD"></i>Held</span><span><i style="background:#EEF2EF"></i>Booked</span></div>'+btn('Add program slot','instructor_home','','ghost'),'Week strip · Server-owned hold states · Clear legend');
+
+DEF('sales_report','instructor','Sales report','Show revenue, commission and booking trends.','Performance totals, trend chart, period tabs, payout link','Server-generated aggregates; no raw payment data on device.',()=>
+ bar('Sales report',{sub:'Performance',right:'<button class="icon-btn" data-action="notify" aria-label="Export report">'+I('upload')+'</button>'})+'<div class="pill-nav"><button class="active" data-tab="sr" data-p="today">Today</button><button data-tab="sr" data-p="week">Week</button><button data-tab="sr" data-p="month">Month</button></div>'+
+ '<div data-pg="sr" data-p="today"><div class="stat-grid"><div class="stat"><b>RM 360</b><small>Gross sales</small></div><div class="stat"><b>3</b><small>Bookings</small></div><div class="stat"><b>RM 54</b><small>Commission 15%</small></div><div class="stat"><b>RM 306</b><small>Net earnings</small></div></div></div>'+
+ '<div data-pg="sr" data-p="week" style="display:none"><div class="stat-grid"><div class="stat"><b>RM 1,860</b><small>Gross sales</small></div><div class="stat"><b>16</b><small>Bookings</small></div><div class="stat"><b>RM 279</b><small>Commission 15%</small></div><div class="stat"><b>RM 1,581</b><small>Net earnings</small></div></div></div>'+
+ '<div data-pg="sr" data-p="month" style="display:none"><div class="stat-grid"><div class="stat"><b>RM 7,420</b><small>Gross sales</small></div><div class="stat"><b>61</b><small>Bookings</small></div><div class="stat"><b>RM 1,113</b><small>Commission 15%</small></div><div class="stat"><b>RM 6,307</b><small>Net earnings</small></div></div></div>'+
+ sec('Booking trend')+bars([40,63,52,78,70,92,84],['M','T','W','T','F','S','S'])+'<div class="callout">'+I('info')+'<div>Figures are aggregated server-side. Pending payments are excluded until confirmed.</div></div>'+btn('View payouts','payouts','','ghost'),'Period comparison · Derived totals · Server aggregates');
+
+DEF('payouts','instructor','Payouts','Show Stripe Connect transfer state without provider keys.','Available balance, Connect status, payout history','Payouts scheduled by webhook after a confirmed payment.',()=>
+ '<div class="hero-card" style="margin-top:8px"><h2>Available balance</h2><p style="font-size:25px;font-weight:850;letter-spacing:-.035em;color:#fff;margin:0 0 12px">RM 2,480.00</p><div class="row"><span style="font-size:10px;color:rgba(255,255,255,.8)">Next payout · 2 business days</span>'+tag('ON SCHEDULE','ok')+'</div></div>'+
+ sec('Payout account')+'<div class="listrow"><span class="li-ico">'+I('card')+'</span><span class="txt"><b>Stripe Connect</b><small>Bank ending 8821</small></span>'+tag('ACTIVE')+'</div>'+
+ sec('Recent payouts')+'<div class="card"><div class="row"><b>RM 860.00</b>'+status('PAID')+'</div><div class="muted" style="margin-top:5px">24 Nov · transfer to bank 8821</div></div><div class="card"><div class="row"><b>RM 540.00</b>'+status('PENDING','warn')+'</div><div class="muted" style="margin-top:5px">20 Nov · arrives in 2 business days</div></div>'+btn('Back to workspace','instructor_home','','ghost'),'Balance prominence · Status as text · No sensitive keys');
+
+/* --- Community & trust --- */
+DEF('groups','community','Groups','Discover and join martial arts communities.','Suggested / Your / Near you tabs, group cards, join actions','Membership enforced by RLS; posts visible to members only.',()=>
+ bar('Groups',{right:'<button class="icon-btn" data-action="notify" aria-label="Create group">'+I('plus')+'</button>'})+h1('Communities')+'<p class="subline">Learn together, outside the lesson.</p><div class="pill-nav"><button class="active" data-tab="gr" data-p="suggested">Suggested</button><button data-tab="gr" data-p="your">Your groups</button><button data-tab="gr" data-p="near">Near you</button></div>'+
+ '<div data-pg="gr" data-p="suggested"><div class="card"><div class="row"><div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#0D5C42,#4CB48A)"></div><div style="flex:1"><b>BJJ Beginners Malaysia</b><div class="muted">4,280 members · Active daily</div></div><button class="btn ghost small" data-nav="group_feed">Join</button></div></div><div class="card"><div class="row"><div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#915522,#E0A86E)"></div><div style="flex:1"><b>Muay Thai Johor</b><div class="muted">1,140 members · 3 km away</div></div><button class="btn ghost small" data-nav="group_feed">Join</button></div></div></div>'+
+ '<div data-pg="gr" data-p="your" style="display:none"><div class="card"><div class="row"><b>Striking &amp; Conditioning</b>'+tag('JOINED','ok')+'</div><div class="muted" style="margin-top:5px">860 members · 12 new posts today</div><div class="row" style="margin-top:10px"><span class="muted">Active community</span><button class="btn small" data-nav="group_feed">Open feed</button></div></div></div>'+
+ '<div data-pg="gr" data-p="near" style="display:none"><div class="card"><div class="row"><div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#315F9C,#9CC3E8)"></div><div style="flex:1"><b>Judo Club JB</b><div class="muted">320 members · 2.1 km away</div></div><button class="btn ghost small" data-nav="group_feed">Join</button></div></div></div>'+
+ btn('Create a group post','post_composer','','ghost'),'Group cards · Tabbed discovery · Membership states');
+
+DEF('group_feed','community','Group feed','Read and interact with member posts.','Group rules, post cards, like/comment/share, composer','Optimistic likes and comments; drafts replayed by WorkManager.',()=>
+ bar('BJJ Beginners Malaysia',{sub:'4,280 members',right:'<button class="icon-btn" data-action="notify" aria-label="Group members">'+I('users')+'</button>'})+h1('Community feed')+
+ '<div class="callout">'+I('info')+'<div><b>Group rules.</b> Be respectful. No spam. Share verified techniques only.</div></div>'+
+ '<div class="card"><div class="row">'+av('Marcus Koh',34)+'<div style="flex:1"><b style="font-size:11.5px">Marcus Koh</b><div class="muted">2 hours ago</div></div><button class="icon-btn plain" data-action="report" aria-label="Report post">'+I('flag','sm')+'</button></div><p class="muted" style="margin:10px 0;color:#33493E">Anyone else drilling guard retention at home? Sharing my 10-minute routine.</p><div class="row"><span class="muted">42 likes · 8 comments</span><span style="display:flex;gap:6px"><button class="icon-btn plain" data-action="like" aria-label="Like post">'+I('heart','sm')+'</button><button class="icon-btn plain" data-action="notify" aria-label="Comment">'+I('message','sm')+'</button><button class="icon-btn plain" data-action="notify" aria-label="Share">'+I('share','sm')+'</button></span></div></div>'+
+ '<div class="card"><div class="row">'+av('Siti Rahma',34)+'<div style="flex:1"><b style="font-size:11.5px">Siti Rahma</b><div class="muted">5 hours ago</div></div></div><p class="muted" style="margin:10px 0;color:#33493E">Beginner tip: ask your instructor about grip fighting before sparring.</p><div class="row"><span class="muted">28 likes · 4 comments</span><button class="icon-btn plain" data-action="like" aria-label="Like post">'+I('heart','sm')+'</button></div></div>'+btn('Write a post','post_composer'),'Feed pattern · Group rules · Optimistic actions');
+
+DEF('post_composer','community','Post composer','Create a text or media post for a joined group.','Group selector, text, media, draft state','Drafts saved locally; idempotency key on replay.',()=>
+ bar('New post',{sub:'Draft saved'})+h1('Share with your group')+'<p class="subline">Your post is visible to group members only.</p>'+selectF('Posting to',['BJJ Beginners Malaysia','Striking & Conditioning'])+areaF('Your post','Ask a question or share a technique…',120)+
+ '<div class="listrow" data-action="media"><span class="li-ico">'+I('camera')+'</span><span class="txt"><b>Attach media</b><small>Image or short video</small></span><span class="chev">'+I('chev','sm')+'</span></div>'+btn('Publish post','group_feed'),'Draft persistence · Clear audience · Media attachment');
+
+DEF('support','community','Support','Submit a support ticket and find contact channels.','Subject, description, attachment, email, phone, contact options','Offline drafts queued in outbox; status reflected in notifications.',()=>
+ bar('Help & support')+h1('How can we help?')+'<p class="subline">Tell us what happened and we will follow up.</p>'+chips(['Booking','Payment','Account','Other'])+
+ selectF('Subject',['Booking issue','Payment issue','Account issue','Other'])+areaF('Describe your issue','Tell us what happened…',92)+
+ '<div class="listrow" data-action="media"><span class="li-ico">'+I('camera')+'</span><span class="txt"><b>Attach image</b><small>Optional · 10 MB max</small></span><span class="chev">'+I('chev','sm')+'</span></div>'+field('Email','you@example.com','email')+field('Phone','012-345 6789','tel')+btn('Submit ticket','home')+
+ sec('Other ways to reach us')+listRow('message','Email support','support@moma.my','support')+listRow('help','Live chat','Weekdays 9:00–18:00','support'),'Topic chips · Form plus alternatives · Draft queue');
+
+DEF('report','community','Report content','Flag a user or content for moderators.','Target reference, seven reasons, details, submit','Visible only to the reporter and admins; queued offline when needed.',()=>
+ bar('Report',{sub:'Confidential'})+h1('Report a user or post')+'<p class="subline">Only MoMA moderators can see your report.</p><div class="callout">'+I('shield')+'<div>Reports are confidential and never shown to the reported user.</div></div>'+
+ selectF('What are you reporting?',['Post in BJJ Beginners Malaysia','User profile','Instructor listing'])+'<div class="field"><span>Reason</span>'+chips(['Spam','Hate speech','False information','Adult content','Violence','IP violation','Other'],-1,true)+'</div>'+areaF('Details','Add context for the moderator…',92)+btn('Submit report','group_feed'),'Confidentiality copy · Reason chips · Auditable submission');
+
+DEF('dispute','community','Booking dispute','Raise a dispute with evidence and a clear reason.','Booking reference, reason, details, evidence, submit','Creates a dispute ticket; review may be blocked until resolution.',()=>
+ bar('Raise a dispute',{sub:'Booking BK-8291'})+h1('Dispute a booking')+'<p class="subline">We will review the case with both parties.</p><div class="summary">'+srow('Booking','Judo · Kenji Watanabe')+srow('Date','2 Nov, 10:00')+srow('Amount','RM 150.00')+'</div>'+
+ selectF('Reason',['Instructor did not attend','Lesson did not match listing','Venue issue','Other'])+areaF('Details','Explain what happened…',92)+'<div class="listrow" data-action="media"><span class="li-ico">'+I('camera')+'</span><span class="txt"><b>Add evidence</b><small>Screenshot or photo · 10 MB max</small></span><span class="chev">'+I('chev','sm')+'</span></div>'+btn('Submit dispute','bookings'),'Reference summary · Evidence path · Clear next step');
+
+/* --- Admin journey --- */
+DEF('admin_console','admin','Admin console','Operations overview for verification, disputes and reports.','KPI cards, work queues, quick actions','Admin-only role claim and RLS; responsive phone/tablet layout.',()=>
+ '<div class="row" style="padding:6px 0"><div style="font-size:16px;font-weight:900;letter-spacing:-.04em;color:var(--primary-dark)">MoMA operations</div>'+tag('ADMIN','info')+'</div><div class="hero-card"><h2>Marketplace health</h2><p>Trust and safety at a glance.</p><div class="stat-grid" style="gap:7px"><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">1,284</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Active users</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">186</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Verified coaches</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">7</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Open disputes</small></div><div style="background:rgba(255,255,255,.14);border-radius:11px;padding:9px"><b style="font-size:17px;display:block">12</b><small style="font-size:9px;color:rgba(255,255,255,.8)">Pending reports</small></div></div></div>'+
+ sec('Work queues')+'<div class="listrow" data-nav="verification_queue"><span class="li-ico">'+I('shield-check')+'</span><span class="txt"><b>Instructor verification</b><small>Applications awaiting review</small></span>'+tag('7','warn')+'</div><div class="listrow" data-nav="dispute_queue"><span class="li-ico">'+I('alert')+'</span><span class="txt"><b>Disputes</b><small>Open cases</small></span>'+tag('7','bad')+'</div><div class="listrow" data-nav="moderation"><span class="li-ico">'+I('flag')+'</span><span class="txt"><b>Content moderation</b><small>Reported items</small></span>'+tag('12','info')+'</div><div class="listrow" data-nav="sales_report"><span class="li-ico">'+I('chart')+'</span><span class="txt"><b>Sales report</b><small>Commission and payouts</small></span><span class="chev">'+I('chev','sm')+'</span></div>','Queue-based operations · Count badges · Role scoping');
+
+DEF('verification_queue','admin','Credential verification','Verify black belts, records and licences before shortlisting and payout.','Applicant list, document review, approve / reject actions','Admin-only decisions; approval sets the verified flag used by the gate.',()=>
+ bar('Verification',{sub:'4 roles pending'})+h1('Coach credentials')+'<p class="subline">Approval unlocks matching eligibility and payouts.</p>'+
+ '<div class="card"><div class="row">'+av('Kenji Watanabe',38)+'<div style="flex:1"><b>Kenji Watanabe</b><div class="muted">Judo 4th dan · certificate + licence</div></div>'+status('PENDING','warn')+'</div><div class="summary" style="margin-top:10px">'+srow('Dan certificate','Uploaded · legible')+srow('Coaching licence','Uploaded · current')+'</div><div class="row"><button class="btn ghost small" data-action="reject">Reject</button><button class="btn small" data-action="verify">Verify coach</button></div></div>'+
+ '<div class="card"><div class="row">'+av('Rafiq Uddin',38)+'<div style="flex:1"><b>Rafiq Uddin</b><div class="muted">Wrestler · competition record · ADCC</div></div>'+status('PENDING','warn')+'</div></div>'+
+ '<div class="card"><div class="row">'+av('Sanjay Rao',38)+'<div style="flex:1"><b>Sanjay Rao</b><div class="muted">Kyokushin black belt · rank check</div></div>'+status('UNDER REVIEW','info')+'</div></div>'+
+ '<div class="card"><div class="row">'+av('Mei Ling Tan',38)+'<div style="flex:1"><b>Mei Ling Tan</b><div class="muted">Muay Thai coach · gym licence</div></div>'+status('UNDER REVIEW','info')+'</div></div>','Decision cards · Document evidence · Gate impact');
+
+DEF('dispute_queue','admin','Dispute queue','Triage booking disputes and record resolutions.','Case list with status, booking and amount, review / resolve','Only admins change dispute status; affected users see read-only state.',()=>
+ bar('Disputes',{sub:'7 open'})+h1('Open cases')+'<p class="subline">Review evidence before changing a case state.</p>'+
+ '<div class="card"><div class="row"><b>BK-8291 · Judo</b>'+status('OPEN','bad')+'</div><div class="muted" style="margin-top:5px">Aina vs Kenji · RM 150.00 · 1 day ago</div><div class="row" style="margin-top:10px"><span class="tag warn">Evidence attached</span><button class="btn small" data-action="resolve">Review case</button></div></div>'+
+ '<div class="card"><div class="row"><b>BK-8170 · Muay Thai</b>'+status('UNDER REVIEW','warn')+'</div><div class="muted" style="margin-top:5px">Wei Jie vs Mei Ling · RM 95.00</div></div>'+
+ '<div class="card"><div class="row"><b>BK-8044 · BJJ Fundamentals</b>'+status('RESOLVED','ok')+'</div><div class="muted" style="margin-top:5px">Refund issued · closed 6 days ago</div></div>'+btn('Back to console','admin_console','','ghost'),'Triage list · Status as text · Evidence cue');
+
+DEF('moderation','admin','Content moderation','Act on reported content with an auditable decision.','Reported item preview, reason and count, keep / remove','Moderation actions create audit events; visibility updates via RLS.',()=>
+ bar('Moderation',{sub:'12 reports'})+h1('Reported content')+'<p class="subline">Every decision is recorded in the audit trail.</p>'+
+ '<div class="card"><div class="row"><b>Post · BJJ Beginners Malaysia</b>'+tag('4 REPORTS','bad')+'</div><div class="muted" style="margin-top:4px">Reason: spam · reported 2 hours ago</div><div class="summary" style="margin-top:10px">“Cheap private lessons, message me directly…”</div><div class="row"><button class="btn ghost small" data-action="keep">Keep</button><button class="btn small" data-action="remove">Remove post</button></div></div>'+
+ '<div class="card"><div class="row"><b>Profile · Instructor listing</b>'+tag('1 REPORT','warn')+'</div><div class="muted" style="margin-top:4px">Reason: false information</div><div class="row" style="margin-top:10px"><button class="btn ghost small" data-action="keep">Keep</button><button class="btn small" data-nav="verification_queue">Verify documents</button></div></div>'+btn('Back to console','admin_console','','ghost'),'Auditable decisions · Content preview · Dual actions');
+
+const h1=t=>'<h1 class="headline">'+t+'</h1>';
+['splash','login','register','forgot'].forEach(id=>{S[id].auth=true;});
+
+/* ============ Journeys ============ */
+const flows={
+  gym:{label:'BJJ gym · first stakeholder',screens:['gym_home','gym_curriculum','coach_shortlist','coach_profile','gym_post_role','checkout','bookings','login']},
+  student:{label:'Student / gym member',screens:['splash','login','register','forgot','home','search','instructor','matching','checkout','bookings','review','dashboard','profile']},
+  instructor:{label:'Coach / instructor',screens:['login','instructor_home','listing_edit','availability','sales_report','payouts','profile']},
+  community:{label:'Community & trust',screens:['groups','group_feed','post_composer','support','report','dispute','bookings']},
+  admin:{label:'Admin / moderator',screens:['login','admin_console','verification_queue','dispute_queue','moderation','sales_report']}
+};
+const navs={
+  gym:[['Programs','gym_home','grid'],['Curriculum','gym_curriculum','calendar'],['Candidates','coach_shortlist','users'],['Bookings','bookings','book'],['Profile','gym_home','user']],
+  student:[['Home','home','home'],['Search','search','search'],['Bookings','bookings','calendar'],['Groups','groups','users'],['Profile','profile','user']],
+  instructor:[['Today','instructor_home','home'],['Listings','listing_edit','grid'],['Bookings','bookings','calendar'],['Reports','sales_report','chart'],['Profile','profile','user']],
+  community:[['Home','home','home'],['Search','search','search'],['Bookings','bookings','calendar'],['Groups','groups','users'],['Profile','profile','user']],
+  admin:[['Overview','admin_console','grid'],['Verify','verification_queue','shield'],['Disputes','dispute_queue','alert'],['Reports','moderation','flag'],['Profile','profile','user']]
+};
+let flow='gym',current='gym_home',previous='gym_home';
+const $=id=>document.getElementById(id);
+let toastTimer;
+function toast(msg){$('toastText').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2400);}
+function render(){
+  const list=flows[flow].screens;
+  if(!list.includes(current)) current=list[0];
+  $('flows').innerHTML=Object.keys(flows).map(k=>'<button data-flow="'+k+'" class="'+(k===flow?'active':'')+'">'+flows[k].label+'</button>').join('');
+  $('rail').innerHTML=list.map((id,i)=>'<button data-screen="'+id+'" class="'+(id===current?'active':'')+'"><span class="num">'+String(i+1).padStart(2,'0')+'</span>'+S[id].title+'</button>').join('');
+  const sc=S[current];
+  $('device').classList.toggle('auth-mode',!!sc.auth);
+  $('device').classList.toggle('splash-mode',current==='splash');
+  const el=$('screen');el.innerHTML=sc.render();el.scrollTop=0;
+  $('nav').innerHTML=navs[flow].map(n=>'<button class="navbtn'+(n[1]===current?' active':'')+'" data-nav="'+n[1]+'" aria-label="'+n[0]+'">'+I(n[2])+'<span>'+n[0]+'</span></button>').join('');
+  $('notes').innerHTML='<div class="notes-title">'+sc.title+'</div><div class="notes-role">'+flows[flow].label+'</div><dl><dt>Purpose</dt><dd>'+sc.purpose+'</dd><dt>Key elements</dt><ul>'+sc.elements.map(e=>'<li>'+e+'</li>').join('')+'</ul><dt>Behaviour</dt><dd>'+sc.behaviour+'</dd></dl><div class="pattern-box"><b>Design patterns</b>'+sc.patterns+'</div><div class="pattern-box"><b>Accessibility notes</b><div class="a11y-row"><span>Touch targets</span><b>≥ 48 dp</b></div><div class="a11y-row"><span>Status</span><b>Text + colour</b></div><div class="a11y-row"><span>Screen readers</span><b>Labelled controls</b></div><div class="a11y-row"><span>Text scaling</span><b>Up to 200%</b></div></div>';
+  const q=$('q');
+  if(q)q.addEventListener('input',function(){
+    const v=this.value.trim().toLowerCase();
+    $('suggest').style.display=v.length>1?'block':'none';
+    document.querySelectorAll('#resultList .coach-card').forEach(c=>{c.style.display=c.textContent.toLowerCase().includes(v)||v.length<2?'':'none';});
+  });
+}
+function open(id){if(id==='back')id=previous;if(!S[id])return;previous=current;current=id;render();}
+$('flows').addEventListener('click',e=>{const b=e.target.closest('[data-flow]');if(!b)return;flow=b.dataset.flow;current=flows[flow].screens[0];previous=current;render();});
+$('rail').addEventListener('click',e=>{const b=e.target.closest('[data-screen]');if(b)open(b.dataset.screen);});
+$('screen').addEventListener('click',e=>{
+  const act=e.target.closest('[data-action]');
+  if(act){
+    const a=act.dataset.action;
+    if(a==='filters'){$('sheet').classList.add('open');return;}
+    if(a==='close-sheet'||a==='apply-filters'){$('sheet').classList.remove('open');if(a==='apply-filters')toast('Filters applied · 4 verified coaches');return;}
+    if(a==='clear-q'){const q=$('q');if(q){q.value='';q.dispatchEvent(new Event('input'));}return;}
+    if(a==='pay'){pay();return;}
+    if(a==='eye'){const pw=$('pw');if(pw){pw.type=pw.type==='password'?'text':'password';toast(pw.type==='text'?'Password visible':'Password hidden');}return;}
+    if(a==='verify'){toast('Credential verified · coach is now eligible for matching');return;}
+    if(a==='reject'){toast('Application rejected · coach may resubmit documents');return;}
+    if(a==='resolve'){toast('Case opened for review · status is UNDER REVIEW');return;}
+    if(a==='keep'||a==='remove'){toast(a==='keep'?'Content kept · decision logged':'Content removed · decision logged');return;}
+    if(a==='like'){toast('Like added');return;}
+    if(a==='social'){toast('Social sign-in simulated');return;}
+    if(a==='media'){toast('Media picker simulated');return;}
+    if(a==='notify'){toast('Action simulated in this prototype');return;}
+    if(a==='share'){toast('Coach profile link copied');return;}
+    if(a==='report'){open('report');return;}
+  }
+  const nav=e.target.closest('[data-nav]');if(nav){open(nav.dataset.nav);return;}
+  const chip=e.target.closest('.chip');
+  if(chip){const row=chip.parentElement;if(row.hasAttribute('data-multi'))chip.classList.toggle('active');else row.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c===chip));return;}
+  const tab=e.target.closest('[data-tab]');
+  if(tab){tab.parentElement.querySelectorAll('[data-tab]').forEach(t=>t.classList.toggle('active',t===tab));document.querySelectorAll('[data-pg="'+tab.dataset.tab+'"]').forEach(p=>{p.style.display=p.dataset.p===tab.dataset.p?'':'none';});return;}
+  const st=e.target.closest('[data-star]');
+  if(st){const n=Number(st.dataset.star);document.querySelectorAll('#stars button').forEach(b=>b.classList.toggle('on',Number(b.dataset.star)<=n));$('starText').textContent=n+' of 5 stars';return;}
+  const tg=e.target.closest('.toggle');
+  if(tg){const on=tg.classList.toggle('on');tg.setAttribute('aria-checked',on?'true':'false');const small=tg.parentElement.querySelector('small');if(small)small.textContent=(on?'On':'Off')+' · tap to '+(on?'disable':'enable');return;}
+  const sl=e.target.closest('.slot.free');
+  if(sl){document.querySelectorAll('.slot').forEach(s=>s.classList.remove('selected'));sl.classList.add('selected');document.querySelectorAll('[data-slot-label]').forEach(x=>x.textContent=sl.textContent);return;}
+});
+$('screen').addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const target=e.target.closest('[data-nav][role="button"],.coach-card[role="button"]');
+  if(target){e.preventDefault();target.click();}
+});
+function pay(){
+  const b=document.querySelector('[data-action="pay"]');if(!b||b.disabled)return;
+  b.disabled=true;b.innerHTML='<span class="spinner"></span> Confirming payment…';
+  const ps=$('payState');if(ps)ps.outerHTML='<span class="tag warn" id="payState">PENDING</span>';
+  setTimeout(()=>{toast('Webhook confirmed · booking is now CONFIRMED');open('bookings');},1200);
+}
+$('prev').addEventListener('click',()=>{const l=flows[flow].screens;let i=l.indexOf(current)-1;if(i<0)i=l.length-1;current=l[i];render();});
+$('next').addEventListener('click',()=>{const l=flows[flow].screens;current=l[(l.indexOf(current)+1)%l.length];render();});
+render();
+</script>
+</body>
+</html>
